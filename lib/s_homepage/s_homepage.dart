@@ -1,6 +1,10 @@
+// ignore_for_file: curly_braces_in_flow_control_structures
+
+import 'package:cryptography_flutter/s_auth/s_login.dart';
+import 'package:cryptography_flutter/s_auth/u_auth.dart';
 import 'package:cryptography_flutter/s_homepage/s_encrypt/s_encrypt.dart';
 import 'package:flutter/material.dart';
-import 's_keys/s_keys.dart'; // Import other screens
+import 's_keys/s_keys.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,15 +17,28 @@ class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
   final List<Widget> _screens = [
     const KeysScreen(),
-    const EncryptScreen(), // Replace with Screen2
-    const Placeholder(), // Replace with Screen3
-    const Placeholder(), // Replace with Screen4
+    const EncryptScreen(),
+    const Placeholder(),
+    const Placeholder(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Tabbed App')),
+      appBar: AppBar(
+        title: Text("Welcome, ${Auth.currentUser.username}"),
+        actions: [
+          IconButton(
+            onPressed: () async {
+              await Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+                return const LoginScreen();
+              }));
+              if (context.mounted) setState(() {});
+            },
+            icon: const Icon(Icons.person),
+          ),
+        ],
+      ),
       body: Center(child: _screens[_currentIndex]),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,

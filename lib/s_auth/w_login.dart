@@ -12,8 +12,16 @@ class LoginWidget extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(user.toString()),
-        TextButton(onPressed: () => Auth.login(user: user), child: const Text("Log in"))
+        TextButton(
+          onPressed: () => _login(context),
+          child: const Text("Log in"),
+        )
       ],
     );
+  }
+
+  void _login(BuildContext context) {
+    Auth.login(user: user);
+    Navigator.of(context).pop();
   }
 }
