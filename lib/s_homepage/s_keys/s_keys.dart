@@ -1,7 +1,7 @@
-import 'dart:io';
+import 'package:cryptography_flutter/file_management/u_file_creation.dart';
+import 'package:cryptography_flutter/s_auth/u_auth.dart';
 import 'package:cryptography_flutter/w_file_contents.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 
 class KeysScreen extends StatefulWidget {
   const KeysScreen({super.key});
@@ -21,34 +21,30 @@ class _KeysScreenState extends State<KeysScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         FileContentsWidget(file: public),
-        ElevatedButton(
-          onPressed: () => _saveKeyToFile(public),
-          child: const Text('Public Key'),
-        ),
+        ElevatedButton(onPressed: () => genPublicKey(), child: const Text('Public Key')),
         FileContentsWidget(file: private),
-        ElevatedButton(
-          onPressed: () => _saveKeyToFile(private),
-          child: const Text('Private Key'),
-        ),
+        ElevatedButton(onPressed: () => genPrivateKey(), child: const Text('Private Key')),
         FileContentsWidget(file: secret),
-        ElevatedButton(
-          onPressed: () => _saveKeyToFile(secret),
-          child: const Text('Secret Key'),
-        ),
+        ElevatedButton(onPressed: () => genSecretKey(), child: const Text('Secret Key')),
       ],
     );
   }
 
-  Future<void> _saveKeyToFile(String fileName) async {
-    try {
-      final Directory directory = await getApplicationDocumentsDirectory();
-      final File file = File('${directory.path}/$fileName');
-      await file.writeAsString('Sample Key Data');
-      final String fileContents = await file.readAsString();
-      setState(() {});
-      print('Contents of $fileName: $fileContents');
-    } catch (e) {
-      print('Error saving key: $e');
-    }
+  void genPublicKey() async {
+    String publicKey = Auth.currentUser.username;
+    await FileManager.saveToFile(public, public + publicKey);
+    setState(() {});
+  }
+
+  void genPrivateKey() async {
+    String privateKey = Auth.currentUser.username;
+    await FileManager.saveToFile(private, private + privateKey);
+    setState(() {});
+  }
+
+  void genSecretKey() async {
+    String secretKey = Auth.currentUser.username;
+    await FileManager.saveToFile(secret, secret + secretKey);
+    setState(() {});
   }
 }

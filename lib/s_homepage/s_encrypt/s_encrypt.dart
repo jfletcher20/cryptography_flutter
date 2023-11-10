@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cryptography_flutter/file_management/u_file_creation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -45,25 +46,11 @@ class _EncryptScreenState extends State<EncryptScreen> {
     if (selectedFile == null) return;
     final originalFileName = selectedFile!.path.split('/').last;
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    await _saveEncryptedFile(originalFileName, 'symmetric_$timestamp');
-    await _saveEncryptedFile(originalFileName, 'asymmetric_$timestamp');
+    await FileManager.saveToFile('${originalFileName}_symmetric_$timestamp', encrypt());
+    await FileManager.saveToFile('${originalFileName}_asymmetric_$timestamp', encrypt());
   }
 
-  Future<void> _saveEncryptedFile(String originalFileName, String suffix) async {
-    try {
-      // final directory = await getApplicationDocumentsDirectory();
-      final encryptedFileName = '$originalFileName' '_encrypted_$suffix.txt';
-      // final encryptedFile = File('${directory.path}/$encryptedFileName');
-
-      // Perform encryption logic here, for example:
-      // final encryptedData = performEncryption(selectedFile!.readAsStringSync());
-
-      // Write encrypted data to the file
-      // await encryptedFile.writeAsString(encryptedData);
-
-      print('File encrypted and saved as $encryptedFileName');
-    } catch (e) {
-      print('Error encrypting file: $e');
-    }
+  String encrypt() {
+    return selectedFile!.readAsStringSync();
   }
 }

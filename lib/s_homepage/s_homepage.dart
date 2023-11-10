@@ -15,29 +15,25 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
-  final List<Widget> _screens = [
-    const KeysScreen(),
-    const EncryptScreen(),
-    const Placeholder(),
-    const Placeholder(),
-  ];
+  late List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      KeysScreen(key: GlobalKey()),
+      EncryptScreen(key: GlobalKey()),
+      Placeholder(key: GlobalKey()),
+      Placeholder(key: GlobalKey()),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("Welcome, ${Auth.currentUser.username}"),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              await Navigator.of(context).push(MaterialPageRoute(builder: (context) {
-                return const LoginScreen();
-              }));
-              if (context.mounted) setState(() {});
-            },
-            icon: const Icon(Icons.person),
-          ),
-        ],
+        actions: [IconButton(onPressed: () => _showLoginScreen(), icon: const Icon(Icons.person))],
       ),
       body: Center(child: _screens[_currentIndex]),
       bottomNavigationBar: BottomNavigationBar(
@@ -51,5 +47,16 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
+  }
+
+  void _showLoginScreen() async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (context) => const LoginScreen()));
+    if (context.mounted) {
+      setState(() {
+        for (var element in _screens) {
+          (element.key as GlobalKey).currentState?.setState(() {});
+        }
+      });
+    }
   }
 }
