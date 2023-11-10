@@ -1,4 +1,5 @@
-import 'package:cryptography_flutter/s_homepage.dart';
+import 'package:cryptography_flutter/data/d_theme.dart';
+import 'package:cryptography_flutter/s_homepage/s_homepage.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -12,9 +13,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: MediaQuery.of(context).platformBrightness == Brightness.dark
-          ? ThemeData.dark()
-          : ThemeData.light(),
+      theme: ThemeEditor.dark,
       home: const HomePage(),
     );
   }

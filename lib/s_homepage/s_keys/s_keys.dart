@@ -45,6 +45,7 @@ class _KeysScreenState extends State<KeysScreen> {
       final File file = File('${directory.path}/$fileName');
       await file.writeAsString('Sample Key Data');
       final String fileContents = await file.readAsString();
+      setState(() {});
       print('Contents of $fileName: $fileContents');
     } catch (e) {
       print('Error saving key: $e');

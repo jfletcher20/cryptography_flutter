@@ -30,7 +30,8 @@ class _FileContentsWidgetState extends State<FileContentsWidget> {
     try {
       final Directory directory = await getApplicationDocumentsDirectory();
       final File file = File('${directory.path}/${widget.file}');
-      return file.readAsString();
+      final String data = await file.readAsString();
+      return data;
     } catch (e) {
       return 'File does not exist';
     }

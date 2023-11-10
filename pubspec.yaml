@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   crypto: ^3.0.3
+  file_picker: ^6.1.1
   flutter:
     sdk: flutter
   path_provider: ^2.1.1
