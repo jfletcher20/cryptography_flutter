@@ -11,15 +11,22 @@ class FileContentsWidget extends StatefulWidget {
   const FileContentsWidget({super.key, required this.file});
 
   @override
-  State<FileContentsWidget> createState() => _FileContentsWidgetState();
+  State<FileContentsWidget> createState() => FileContentsWidgetState();
 }
 
-class _FileContentsWidgetState extends State<FileContentsWidget> {
+class FileContentsWidgetState extends State<FileContentsWidget> {
+  String fileContents = "";
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      builder: (context, snapshot) =>
-          snapshot.hasData ? Text(snapshot.data.toString()) : const CircularProgressIndicator(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          fileContents = snapshot.data.toString();
+          return Text(fileContents);
+        } else
+          return const CircularProgressIndicator();
+      },
       future: _readFileContents(),
     );
   }
@@ -31,7 +38,7 @@ class _FileContentsWidgetState extends State<FileContentsWidget> {
       final String data = await file.readAsString();
       return data;
     } catch (e) {
-      return 'File does not exist';
+      return "File does not exist";
     }
   }
 }

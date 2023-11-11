@@ -9,8 +9,10 @@ import '../file_management/u_directory.dart';
 
 class Auth {
   static late User _currentUser;
+
   static User get currentUser => _currentUser;
   static String get userPath => "${DirectoryManager.appDocsDirectory}/${_currentUser.username}";
+
   static bool login({String? username, User? user}) {
     if (username == null && user == null)
       return false;
@@ -21,6 +23,7 @@ class Auth {
     return true;
   }
 
+  /// Login safely (create directory if needed)
   static Future<bool> safeLogin({String? username, User? user}) async {
     bool successfulLogin = login(username: username, user: user);
     if (successfulLogin) {
