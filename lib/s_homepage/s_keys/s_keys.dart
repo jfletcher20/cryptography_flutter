@@ -31,11 +31,11 @@ class _KeysScreenState extends State<KeysScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        ...wrap("Public key: ", FileContentsWidget(key: publicKey, file: public)),
-        ...wrap("Private key: ", FileContentsWidget(key: privateKey, file: private)),
-        ElevatedButton(onPressed: () => genAsymmetricKeys(), child: const Text('Asymmetric keys')),
-        ...wrap("Secret key: ", FileContentsWidget(key: secretKey, file: secret)),
-        ElevatedButton(onPressed: () => genSecretKey(), child: const Text('Secret Key')),
+        ...wrap("Public key: ", FileContentsWidget(key: publicKey, fileName: public)),
+        ...wrap("Private key: ", FileContentsWidget(key: privateKey, fileName: private)),
+        ElevatedButton(onPressed: () => genAsymmetricKeys(), child: const Text("Asymmetric keys")),
+        ...wrap("Secret key: ", FileContentsWidget(key: secretKey, fileName: secret)),
+        ElevatedButton(onPressed: () => genSecretKey(), child: const Text("Secret Key")),
       ],
     );
   }

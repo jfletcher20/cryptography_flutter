@@ -6,9 +6,9 @@ class DirectoryManager {
     var directory = Directory(path);
     if (!directory.existsSync()) {
       directory.createSync(recursive: true);
-      print('Directory created: $path');
+      print("Directory created: $path");
     } else {
-      print('Directory already exists: $path');
+      print("Directory already exists: $path");
     }
   }
 }

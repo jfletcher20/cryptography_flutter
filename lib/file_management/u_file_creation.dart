@@ -10,10 +10,10 @@ class FileManager {
       final File file = File("${directory.path}/${Auth.userPath}/$fileName");
       await file.writeAsString(data);
       final String fileContents = await file.readAsString();
-      print('Contents of $fileName: $fileContents');
+      print("Contents of $fileName: $fileContents");
       return file;
     } catch (e) {
-      print('Error saving file: $e');
+      print("Error saving file: $e");
     }
     return null;
   }
@@ -23,7 +23,7 @@ class FileManager {
       final String fileContents = file.readAsStringSync();
       return fileContents;
     } catch (e) {
-      print('Error reading key: $e');
+      print("Error reading key: $e");
     }
     return "File does not exist";
   }
@@ -35,7 +35,7 @@ class FileManager {
       final File private = File("${directory.path}/${Auth.userPath}/privatni_kljuc.txt");
       return (public.readAsStringSync(), private.readAsStringSync());
     } catch (e) {
-      print('Error reading key: $e');
+      print("Error reading key: $e");
     }
     return ("Error: A file does not exist", "Error: A file does not exist");
   }
