@@ -94,12 +94,10 @@ class _KeysScreenState extends State<KeysScreen> {
   }
 
   Future<void> savePublicKey(String publicKey) async {
-    print("Generated public key $publicKey");
     await FileManager.saveToFile(public, publicKey);
   }
 
   Future<void> savePrivateKey(String privateKey) async {
-    print("Generated private key $privateKey");
     await FileManager.saveToFile(private, privateKey);
   }
 

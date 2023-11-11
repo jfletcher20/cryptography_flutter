@@ -8,16 +8,16 @@ import 'package:pointycastle/api.dart';
 import 'package:pointycastle/asymmetric/api.dart';
 import 'package:pointycastle/export.dart' as crypto;
 
-class EncryptScreen extends StatefulWidget {
-  const EncryptScreen({super.key});
+class DecryptScreen extends StatefulWidget {
+  const DecryptScreen({super.key});
 
   @override
-  State<EncryptScreen> createState() => _EncryptScreenState();
+  State<DecryptScreen> createState() => _DecryptScreenState();
 }
 
-class _EncryptScreenState extends State<EncryptScreen> {
+class _DecryptScreenState extends State<DecryptScreen> {
   File? selectedFile;
-  bool isEncryptButtonEnabled = false;
+  bool isDecryptButtonEnabled = false;
 
   @override
   Widget build(BuildContext context) {
@@ -30,8 +30,8 @@ class _EncryptScreenState extends State<EncryptScreen> {
         ),
         const SizedBox(height: 16),
         ElevatedButton(
-          onPressed: isEncryptButtonEnabled ? _encryptFile : null,
-          child: const Text('Encrypt File'),
+          onPressed: isDecryptButtonEnabled ? _decryptFile : null,
+          child: const Text('Decrypt File'),
         ),
       ],
     );
@@ -42,35 +42,32 @@ class _EncryptScreenState extends State<EncryptScreen> {
     if (result != null) {
       setState(() {
         selectedFile = File(result.files.single.path!);
-        isEncryptButtonEnabled = true;
+        isDecryptButtonEnabled = true;
       });
     }
   }
 
-  Future<void> _encryptFile() async {
+  Future<void> _decryptFile() async {
     if (selectedFile == null) return;
-
+    final fileName = selectedFile!.path.split("\\").last.replaceAll(".txt", "");
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    String originalFileName = selectedFile!.path.split("\\").last.replaceAll(".txt", "");
-
-    String asymmetricFileName = "${originalFileName}_asymmetric_encryption_$timestamp.txt";
-    await FileManager.saveToFile(asymmetricFileName, await assymetricEncryption());
-
-    // String symmetricFileName = "${originalFileName}_symmetric_encryption_$timestamp.txt";
-    // await FileManager.saveToFile('${fileName}_symmetric_encryption_$timestamp', encrypt());
+    // await FileManager.saveToFile('${fileName}_symmetric_decryption_$timestamp', encrypt());
+    String asym = await asymmetricDecryption();
+    await FileManager.saveToFile('${fileName}_asymmetric_decryption_$timestamp.txt', asym);
   }
 
-  Future<String> assymetricEncryption() async {
+  Future<String> asymmetricDecryption() async {
     String fileContents = FileManager.readFromFile(selectedFile!);
 
-    AsymmetricKeyParameter<RSAPublicKey> publicKey =
-        PublicKeyParameter(await KeysManager.publicKey());
+    AsymmetricKeyParameter<RSAPrivateKey> privateKey =
+        PrivateKeyParameter(await KeysManager.privateKey());
 
     crypto.RSAEngine cipher = crypto.RSAEngine();
-    cipher.init(true, publicKey);
 
-    Uint8List cipherText = cipher.process(Uint8List.fromList(fileContents.codeUnits));
+    cipher.init(false, privateKey);
+    Uint8List decrypted = cipher.process(Uint8List.fromList(fileContents.codeUnits));
+    print("Decrypted: ${String.fromCharCodes(decrypted)}");
 
-    return String.fromCharCodes(cipherText);
+    return String.fromCharCodes(decrypted);
   }
 }

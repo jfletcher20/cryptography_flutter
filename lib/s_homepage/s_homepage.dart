@@ -2,6 +2,7 @@
 
 import 'package:cryptography_flutter/s_auth/s_login.dart';
 import 'package:cryptography_flutter/s_auth/u_auth.dart';
+import 'package:cryptography_flutter/s_homepage/s_decrypt/s_decrypt.dart';
 import 'package:cryptography_flutter/s_homepage/s_encrypt/s_encrypt.dart';
 import 'package:flutter/material.dart';
 import 's_keys/s_keys.dart';
@@ -23,7 +24,7 @@ class _HomePageState extends State<HomePage> {
     _screens = [
       KeysScreen(key: GlobalKey()),
       EncryptScreen(key: GlobalKey()),
-      Placeholder(key: GlobalKey()),
+      DecryptScreen(key: GlobalKey()),
       Placeholder(key: GlobalKey()),
     ];
   }
