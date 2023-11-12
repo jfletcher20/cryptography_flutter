@@ -10,6 +10,6 @@ class SignFileWidget extends StatefulWidget {
 class _SignFileWidgetState extends State<SignFileWidget> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Text("Sign a document.");
   }
 }
