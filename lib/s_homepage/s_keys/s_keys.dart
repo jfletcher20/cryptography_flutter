@@ -52,7 +52,7 @@ class _KeysScreenState extends State<KeysScreen> {
   }
 
   (RSAKeyGeneratorParameters, FortunaRandom) _keyParameters() {
-    RSAKeyGeneratorParameters keyParams = RSAKeyGeneratorParameters(BigInt.from(3), 2048, 5);
+    RSAKeyGeneratorParameters keyParams = RSAKeyGeneratorParameters(BigInt.parse('65537'), 2048, 5);
     FortunaRandom secureRandom = FortunaRandom();
     Random seedRandom = Random.secure();
 

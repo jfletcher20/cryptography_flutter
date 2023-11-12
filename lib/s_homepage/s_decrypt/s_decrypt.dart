@@ -1,3 +1,5 @@
+// ignore_for_file: curly_braces_in_flow_control_structures
+
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:cryptography_flutter/file_management/u_file_creation.dart';
@@ -30,12 +32,20 @@ class _DecryptScreenState extends State<DecryptScreen> {
         ...wrap("File contents: ", FileContentsWidget(file: selectedFile)),
         ElevatedButton(onPressed: _pickFile, child: const Text("Select File")),
         const SizedBox(height: 16),
-        if (decryptedText.isNotEmpty) ...wrap("Decrypted text: ", Text(decryptedText)),
+        if (decryptedText.isNotEmpty) ..._decryptedTextWidget,
         ElevatedButton(
           onPressed: isDecryptButtonEnabled ? _decryptFile : null,
           child: const Text("Decrypt File"),
         ),
       ],
+    );
+  }
+
+  List<Widget> get _decryptedTextWidget {
+    TextStyle style = Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.green[200]);
+    return wrap(
+      "Decrypted text: ",
+      Text(decryptedText, style: style),
     );
   }
 
@@ -66,7 +76,17 @@ class _DecryptScreenState extends State<DecryptScreen> {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     // await FileManager.saveToFile("${fileName}_symmetric_decryption_$timestamp", encrypt());
     String asym = await asymmetricDecryption();
-    await FileManager.saveToFile("${fileName}_asymmetric_decryption_$timestamp.txt", asym);
+    try {
+      await FileManager.saveToFile(
+        "${fileName}_asymmetric_decryption_$timestamp.txt",
+        asym,
+        createDir: true,
+        additionalPath: "asymmetric_decryption",
+      );
+    } catch (e) {
+      if (context.mounted)
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
   }
 
   Future<String> asymmetricDecryption() async {

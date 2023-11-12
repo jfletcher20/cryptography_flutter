@@ -44,7 +44,7 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(icon: Icon(Icons.vpn_key), label: 'Keys'),
           BottomNavigationBarItem(icon: Icon(Icons.enhanced_encryption), label: 'Encrypt'),
           BottomNavigationBarItem(icon: Icon(Icons.no_encryption_rounded), label: 'Decrypt'),
-          BottomNavigationBarItem(icon: Icon(Icons.approval_rounded), label: 'Stamp'),
+          BottomNavigationBarItem(icon: Icon(Icons.approval_rounded), label: 'Sign'),
         ],
       ),
     );

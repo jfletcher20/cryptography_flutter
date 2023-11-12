@@ -30,12 +30,20 @@ class _EncryptScreenState extends State<EncryptScreen> {
         ...wrap("File contents: ", FileContentsWidget(file: selectedFile)),
         ElevatedButton(onPressed: _pickFile, child: const Text("Select File")),
         const SizedBox(height: 16),
-        if (encryptedText.isNotEmpty) ...wrap("Encrypted text: ", Text(encryptedText)),
+        if (encryptedText.isNotEmpty) ..._encryptedTextWidget,
         ElevatedButton(
           onPressed: isEncryptButtonEnabled ? _encryptFile : null,
           child: const Text("Encrypt File"),
         ),
       ],
+    );
+  }
+
+  List<Widget> get _encryptedTextWidget {
+    TextStyle style = Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.green[200]);
+    return wrap(
+      "Encrypted text: ",
+      Text(encryptedText, style: style),
     );
   }
 
@@ -68,7 +76,12 @@ class _EncryptScreenState extends State<EncryptScreen> {
 
     String asymmetricFileName = "${originalFileName}_asymmetric_encryption_$timestamp.txt";
     try {
-      await FileManager.saveToFile(asymmetricFileName, await asymetricEncryption());
+      await FileManager.saveToFile(
+        asymmetricFileName,
+        await asymmetricEncryption(),
+        additionalPath: "asymmetric_encryption",
+        createDir: true,
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     }
@@ -77,7 +90,7 @@ class _EncryptScreenState extends State<EncryptScreen> {
     // await FileManager.saveToFile("${fileName}_symmetric_encryption_$timestamp", encrypt());
   }
 
-  Future<String> asymetricEncryption() async {
+  Future<String> asymmetricEncryption() async {
     String fileContents = FileManager.readFromFile(selectedFile!);
 
     AsymmetricKeyParameter<RSAPublicKey> publicKey =

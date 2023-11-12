@@ -7,5 +7,13 @@ class ThemeEditor {
       selectedItemColor: Colors.white,
       unselectedItemColor: Colors.grey,
     ),
+    textTheme: TextTheme(
+      displaySmall: ThemeData.dark().textTheme.bodySmall!.copyWith(
+            color: Colors.lightBlue[100],
+            decoration: TextDecoration.underline,
+            fontStyle: FontStyle.italic,
+            fontSize: 12,
+          ),
+    ),
   );
 }

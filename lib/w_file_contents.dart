@@ -20,22 +20,32 @@ class FileContentsWidgetState extends State<FileContentsWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final TextStyle style = Theme.of(context).textTheme.displaySmall!;
     if (widget.file == null && widget.fileName == null)
-      return const Text("No file was specified.");
+      return Text("No file was specified.", style: style.copyWith(color: Colors.red[200]));
     else if (widget.fileName != null)
       return FutureBuilder(
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            fileContents = snapshot.data.toString();
-            return Text(fileContents);
-          } else
+            fileContents = snapshot.data as String;
+            if (fileContents == "-1") {
+              return Text(
+                "File does not exist",
+                style: style.copyWith(color: Colors.red[200]),
+              );
+            } else {
+              fileContents = snapshot.data as String;
+              return Text(fileContents, style: style);
+            }
+          } else {
             return const CircularProgressIndicator();
+          }
         },
         future: _readFileContents(),
       );
     else {
       fileContents = widget.file!.readAsStringSync();
-      return Text(fileContents);
+      return Text(fileContents, style: style);
     }
   }
 
@@ -46,7 +56,7 @@ class FileContentsWidgetState extends State<FileContentsWidget> {
       final String data = await file.readAsString();
       return data;
     } catch (e) {
-      return "File does not exist";
+      return "-1";
     }
   }
 }
