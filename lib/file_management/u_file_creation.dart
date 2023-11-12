@@ -60,4 +60,15 @@ class FileManager {
     }
     return ("Error: A file does not exist", "Error: A file does not exist");
   }
+
+  static Future<String> readSecretKeyFromFile() async {
+    try {
+      final Directory directory = await getApplicationDocumentsDirectory();
+      final File secret = File("${directory.path}/${Auth.userPath}/tajni_kljuc.txt");
+      return secret.readAsStringSync();
+    } catch (e) {
+      print("Error reading key: $e");
+    }
+    return "Error: A file does not exist";
+  }
 }

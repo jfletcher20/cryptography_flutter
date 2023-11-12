@@ -29,19 +29,36 @@ class _VerifySignatureWidgetState extends State<VerifySignatureWidget> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        ...wrap("Original file: ", Text(originalFile?.path ?? "None")),
-        ...wrap("File contents: ", FileContentsWidget(file: originalFile)),
-        ElevatedButton(onPressed: _pickOriginalFile, child: const Text("Select Original File")),
-        const SizedBox(height: 16),
-        ...wrap("Signed file: ", Text(signedFile?.path ?? "None")),
-        ...wrap("File contents: ", FileContentsWidget(file: signedFile)),
-        ElevatedButton(onPressed: _pickSignedFile, child: const Text("Select Signed File")),
-        const SizedBox(height: 16),
+        Center(
+            child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [_originalFilePicker, const SizedBox(width: 32), _signedFilePicker])),
+        const SizedBox(height: 64),
         ..._verificationResultWidget,
         ElevatedButton(
           onPressed: isVerificationButtonEnabled ? _verifyFile : null,
           child: const Text("Verify Signature"),
         ),
+      ],
+    );
+  }
+
+  Widget get _originalFilePicker {
+    return Column(
+      children: [
+        ...wrap("Original file: ", Text(originalFile?.path ?? "None")),
+        ...wrap("File contents: ", FileContentsWidget(file: originalFile)),
+        ElevatedButton(onPressed: _pickOriginalFile, child: const Text("Select Original File")),
+      ],
+    );
+  }
+
+  Widget get _signedFilePicker {
+    return Column(
+      children: [
+        ...wrap("Signed file: ", Text(signedFile?.path ?? "None")),
+        ...wrap("File contents: ", FileContentsWidget(file: signedFile)),
+        ElevatedButton(onPressed: _pickSignedFile, child: const Text("Select Signed File")),
       ],
     );
   }
@@ -62,7 +79,7 @@ class _VerifySignatureWidgetState extends State<VerifySignatureWidget> {
       Text(label),
       Container(
         padding: const EdgeInsets.all(20),
-        height: 100,
+        constraints: const BoxConstraints(maxHeight: 100, maxWidth: 500),
         child: SingleChildScrollView(child: child),
       ),
     ];

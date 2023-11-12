@@ -55,7 +55,7 @@ class _SignFileWidgetState extends State<SignFileWidget> {
       Text(label),
       Container(
         padding: const EdgeInsets.all(20),
-        height: 100,
+        constraints: const BoxConstraints(maxHeight: 100, maxWidth: 500),
         child: SingleChildScrollView(child: child),
       ),
     ];

@@ -7,7 +7,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:pointycastle/api.dart';
 import 'package:pointycastle/asymmetric/api.dart';
-import 'package:pointycastle/export.dart' as crypto;
+import 'package:pointycastle/asymmetric/rsa.dart';
+import 'package:pointycastle/block/aes.dart';
+import 'package:pointycastle/paddings/pkcs7.dart';
 
 class EncryptScreen extends StatefulWidget {
   const EncryptScreen({super.key});
@@ -19,7 +21,7 @@ class EncryptScreen extends StatefulWidget {
 class _EncryptScreenState extends State<EncryptScreen> {
   File? selectedFile;
   bool isEncryptButtonEnabled = false;
-  String encryptedText = "";
+  String encryptedTextRSA = "", encryptedTextAES = "";
 
   @override
   Widget build(BuildContext context) {
@@ -29,21 +31,52 @@ class _EncryptScreenState extends State<EncryptScreen> {
         ...wrap("Selected file: ", Text(selectedFile?.path ?? "None")),
         ...wrap("File contents: ", FileContentsWidget(file: selectedFile)),
         ElevatedButton(onPressed: _pickFile, child: const Text("Select File")),
-        const SizedBox(height: 16),
-        if (encryptedText.isNotEmpty) ..._encryptedTextWidget,
-        ElevatedButton(
-          onPressed: isEncryptButtonEnabled ? _encryptFile : null,
-          child: const Text("Encrypt File"),
-        ),
+        const SizedBox(height: 64),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _asymmetricEncryptionWidget,
+            const SizedBox(width: 64),
+            _symmetricEncryptionWidget,
+          ],
+        )
       ],
     );
   }
 
-  List<Widget> get _encryptedTextWidget {
+  Widget get _asymmetricEncryptionWidget {
+    return Column(children: [
+      if (encryptedTextRSA.isNotEmpty) ..._encryptedTextRSAWidget,
+      ElevatedButton(
+        onPressed: isEncryptButtonEnabled ? _encryptFileRSA : null,
+        child: const Text("Asymmetric Encryption"),
+      ),
+    ]);
+  }
+
+  Widget get _symmetricEncryptionWidget {
+    return Column(children: [
+      if (encryptedTextAES.isNotEmpty) ..._encryptedTextAESWidget,
+      ElevatedButton(
+        onPressed: isEncryptButtonEnabled ? _encryptFileAES : null,
+        child: const Text("Symmetric Encryption"),
+      ),
+    ]);
+  }
+
+  List<Widget> get _encryptedTextRSAWidget {
     TextStyle style = Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.green[200]);
     return wrap(
       "Encrypted text: ",
-      Text(encryptedText, style: style),
+      Text(encryptedTextRSA, style: style),
+    );
+  }
+
+  List<Widget> get _encryptedTextAESWidget {
+    TextStyle style = Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.green[200]);
+    return wrap(
+      "Encrypted text: ",
+      Text(encryptedTextAES, style: style),
     );
   }
 
@@ -52,7 +85,7 @@ class _EncryptScreenState extends State<EncryptScreen> {
       Text(label),
       Container(
         padding: const EdgeInsets.all(20),
-        height: 100,
+        constraints: const BoxConstraints(maxHeight: 100, maxWidth: 500),
         child: SingleChildScrollView(child: child),
       ),
     ];
@@ -68,16 +101,32 @@ class _EncryptScreenState extends State<EncryptScreen> {
     }
   }
 
-  Future<void> _encryptFile() async {
-    if (selectedFile == null) return;
-
+  String getFileName(String type) {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     String originalFileName = selectedFile!.path.split("\\").last.replaceAll(".txt", "");
+    String fileName = "${originalFileName}_${type}_encryption_$timestamp.txt";
+    return fileName;
+  }
 
-    String asymmetricFileName = "${originalFileName}_asymmetric_encryption_$timestamp.txt";
+  Future<void> _encryptFileAES() async {
+    if (selectedFile == null) return;
     try {
       await FileManager.saveToFile(
-        asymmetricFileName,
+        getFileName("symmetric"),
+        await symmetricEncryption(),
+        additionalPath: "symmetric_encryption",
+        createDir: true,
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  Future<void> _encryptFileRSA() async {
+    if (selectedFile == null) return;
+    try {
+      await FileManager.saveToFile(
+        getFileName("asymmetric"),
         await asymmetricEncryption(),
         additionalPath: "asymmetric_encryption",
         createDir: true,
@@ -85,9 +134,6 @@ class _EncryptScreenState extends State<EncryptScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     }
-
-    // String symmetricFileName = "${fileName}_symmetric_encryption_$timestamp.txt";
-    // await FileManager.saveToFile("${fileName}_symmetric_encryption_$timestamp", encrypt());
   }
 
   Future<String> asymmetricEncryption() async {
@@ -96,14 +142,39 @@ class _EncryptScreenState extends State<EncryptScreen> {
     AsymmetricKeyParameter<RSAPublicKey> publicKey =
         PublicKeyParameter(await KeysManager.publicKey());
 
-    crypto.RSAEngine cipher = crypto.RSAEngine();
+    RSAEngine cipher = RSAEngine();
     cipher.init(true, publicKey);
 
     Uint8List cipherText = cipher.process(Uint8List.fromList(fileContents.codeUnits));
     setState(() {
-      encryptedText = String.fromCharCodes(cipherText);
+      encryptedTextRSA = String.fromCharCodes(cipherText);
     });
 
     return String.fromCharCodes(cipherText);
+  }
+
+  Future<String> symmetricEncryption() async {
+    String fileContents = FileManager.readFromFile(selectedFile!);
+
+    Uint8List secretKey = await KeysManager.secretKey();
+
+    AESEngine cipher = AESEngine();
+    cipher.init(true, KeyParameter(secretKey));
+
+    Uint8List cipherText =
+        cipher.process(Uint8List.fromList(pad(Uint8List.fromList(fileContents.codeUnits), 256)));
+
+    setState(() {
+      encryptedTextAES = String.fromCharCodes(cipherText);
+    });
+
+    return String.fromCharCodes(cipherText);
+  }
+
+  Uint8List pad(Uint8List bytes, int blockSize) {
+    int padLength = blockSize - (bytes.length % blockSize);
+    Uint8List padded = Uint8List(bytes.length + padLength)..setAll(0, bytes);
+    PKCS7Padding().addPadding(padded, bytes.length);
+    return padded;
   }
 }

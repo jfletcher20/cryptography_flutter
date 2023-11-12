@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:cryptography_flutter/file_management/u_file_creation.dart';
 import 'package:pointycastle/export.dart';
 
@@ -19,5 +22,11 @@ class KeysManager {
     BigInt? p = BigInt.parse(privateKeyList[2]);
     BigInt? q = BigInt.parse(privateKeyList[3]);
     return RSAPrivateKey(mod, exp, p, q);
+  }
+
+  static Future<Uint8List> secretKey() async {
+    String secretKey = await FileManager.readSecretKeyFromFile();
+    Uint8List decodedKeyBytes = base64.decode(secretKey);
+    return decodedKeyBytes;
   }
 }
