@@ -31,7 +31,7 @@ class _EncryptScreenState extends State<EncryptScreen> {
         ...wrap("Selected file: ", Text(selectedFile?.path ?? "None")),
         ...wrap("File contents: ", FileContentsWidget(file: selectedFile)),
         ElevatedButton(onPressed: _pickFile, child: const Text("Select File")),
-        const SizedBox(height: 64),
+        const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -162,7 +162,7 @@ class _EncryptScreenState extends State<EncryptScreen> {
     cipher.init(true, KeyParameter(secretKey));
 
     Uint8List cipherText =
-        cipher.process(Uint8List.fromList(pad(Uint8List.fromList(fileContents.codeUnits), 256)));
+        cipher.process(Uint8List.fromList(pad(Uint8List.fromList(fileContents.codeUnits), 128)));
 
     setState(() {
       encryptedTextAES = String.fromCharCodes(cipherText);

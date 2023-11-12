@@ -9,8 +9,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:pointycastle/api.dart';
 import 'package:pointycastle/asymmetric/api.dart';
+import 'package:pointycastle/block/aes.dart';
 import 'package:pointycastle/export.dart' as crypto;
-import 'package:pointycastle/paddings/pkcs7.dart';
 
 class DecryptScreen extends StatefulWidget {
   const DecryptScreen({super.key});
@@ -33,7 +33,7 @@ class _DecryptScreenState extends State<DecryptScreen> {
         ...wrap("File contents: ", FileContentsWidget(file: selectedFile)),
         ElevatedButton(onPressed: _pickFile, child: const Text("Select File")),
         const SizedBox(height: 16),
-        Row(children: [
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           _asymmetricDecryptionWidget,
           const SizedBox(width: 64),
           _symmetricDecryptionWidget,
@@ -157,15 +157,12 @@ class _DecryptScreenState extends State<DecryptScreen> {
     String fileContents = FileManager.readFromFile(selectedFile!);
 
     Uint8List keyBytes = await KeysManager.secretKey();
+    KeyParameter params = KeyParameter(keyBytes);
 
-    crypto.AESEngine aes = crypto.AESEngine();
-    crypto.CBCBlockCipher cipher = crypto.CBCBlockCipher(aes);
-    crypto.ParametersWithIV<crypto.KeyParameter> params =
-        crypto.ParametersWithIV(crypto.KeyParameter(keyBytes), Uint8List(16));
+    AESEngine aes = AESEngine();
+    aes.init(false, params);
 
-    cipher.init(false, params);
-
-    Uint8List decrypted = cipher.process(Uint8List.fromList(fileContents.codeUnits));
+    Uint8List decrypted = aes.process(Uint8List.fromList(fileContents.codeUnits));
     setState(() {
       decryptedTextAES = String.fromCharCodes(decrypted);
     });

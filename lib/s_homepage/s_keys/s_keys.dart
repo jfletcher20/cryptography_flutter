@@ -6,10 +6,8 @@ import 'package:cryptography_flutter/w_file_contents.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pointycastle/api.dart';
-import 'package:pointycastle/block/aes.dart';
 import 'package:pointycastle/export.dart' as crypto;
 import 'package:pointycastle/impl.dart';
-import 'package:pointycastle/paddings/pkcs7.dart';
 import 'package:pointycastle/random/fortuna_random.dart';
 
 class KeysScreen extends StatefulWidget {
@@ -102,7 +100,6 @@ class _KeysScreenState extends State<KeysScreen> {
   }
 
   Future<void> genSecretKey() async {
-    AESEngine aes = AESEngine();
     SecureRandom secureRandom = FortunaRandom();
     Random seedRandom = Random.secure();
 
@@ -114,18 +111,7 @@ class _KeysScreenState extends State<KeysScreen> {
     secureRandom.seed(KeyParameter(Uint8List.fromList(seeds)));
 
     KeyParameter params = KeyParameter(secureRandom.nextBytes(32));
-    List<List<int>>? key = aes.generateWorkingKey(true, params);
-
-    // Convert the key to a byte list
-    Uint8List keyBytes = Uint8List.fromList(key!.expand((e) => e).toList());
-
-    // Encode the key as a Base64-encoded string
     String encodedKey = base64.encode(params.key);
-
-    List<List<int>>? decodedKey =
-        aes.generateWorkingKey(true, KeyParameter(base64.decode(encodedKey)));
-    print(key!.expand((e) => e).toList());
-    print(decodedKey!.expand((e) => e).toList());
 
     await saveSecretKey(encodedKey);
     setState(() {});
