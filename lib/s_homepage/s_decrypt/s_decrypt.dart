@@ -10,7 +10,10 @@ import 'package:flutter/material.dart';
 import 'package:pointycastle/api.dart';
 import 'package:pointycastle/asymmetric/api.dart';
 import 'package:pointycastle/block/aes.dart';
+import 'package:pointycastle/block/modes/cbc.dart';
 import 'package:pointycastle/export.dart' as crypto;
+import 'package:pointycastle/padded_block_cipher/padded_block_cipher_impl.dart';
+import 'package:pointycastle/paddings/pkcs7.dart';
 
 class DecryptScreen extends StatefulWidget {
   const DecryptScreen({super.key});
@@ -156,13 +159,25 @@ class _DecryptScreenState extends State<DecryptScreen> {
   Future<String> symmetricDecryption() async {
     String fileContents = FileManager.readFromFile(selectedFile!);
 
-    Uint8List keyBytes = await KeysManager.secretKey();
-    KeyParameter params = KeyParameter(keyBytes);
+    Uint8List secretKey = await KeysManager.secretKey();
+
+    // Extract IV from the first 16 bytes
+    Uint8List iv = Uint8List.sublistView(Uint8List.fromList(fileContents.codeUnits), 0, 16);
 
     AESEngine aes = AESEngine();
-    aes.init(false, params);
+    CBCBlockCipher cipher = CBCBlockCipher(aes);
+    ParametersWithIV<KeyParameter> keyParameters = ParametersWithIV(KeyParameter(secretKey), iv);
 
-    Uint8List decrypted = aes.process(Uint8List.fromList(fileContents.codeUnits));
+    PaddedBlockCipherParameters<ParametersWithIV<KeyParameter>, Null> params =
+        PaddedBlockCipherParameters<ParametersWithIV<KeyParameter>, Null>(keyParameters, null);
+
+    PaddedBlockCipherImpl cipherImpl = PaddedBlockCipherImpl(PKCS7Padding(), cipher);
+    cipherImpl.init(false, params);
+
+    // Skip the first 16 bytes (IV) during decryption
+    Uint8List decrypted =
+        cipherImpl.process(Uint8List.sublistView(Uint8List.fromList(fileContents.codeUnits), 16));
+
     setState(() {
       decryptedTextAES = String.fromCharCodes(decrypted);
     });

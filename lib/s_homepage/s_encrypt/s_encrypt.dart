@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 import 'package:cryptography_flutter/file_management/u_file_creation.dart';
 import 'package:cryptography_flutter/file_management/u_keys.dart';
@@ -9,7 +10,10 @@ import 'package:pointycastle/api.dart';
 import 'package:pointycastle/asymmetric/api.dart';
 import 'package:pointycastle/asymmetric/rsa.dart';
 import 'package:pointycastle/block/aes.dart';
+import 'package:pointycastle/block/modes/cbc.dart';
+import 'package:pointycastle/padded_block_cipher/padded_block_cipher_impl.dart';
 import 'package:pointycastle/paddings/pkcs7.dart';
+import 'package:pointycastle/random/fortuna_random.dart';
 
 class EncryptScreen extends StatefulWidget {
   const EncryptScreen({super.key});
@@ -158,17 +162,40 @@ class _EncryptScreenState extends State<EncryptScreen> {
 
     Uint8List secretKey = await KeysManager.secretKey();
 
-    AESEngine cipher = AESEngine();
-    cipher.init(true, KeyParameter(secretKey));
+    SecureRandom secureRandom = FortunaRandom();
+    Random seedRandom = Random.secure();
+
+    List<int> seeds = [];
+    for (int i = 0; i < 32; i++) {
+      seeds.add(seedRandom.nextInt(256));
+    }
+
+    secureRandom.seed(KeyParameter(Uint8List.fromList(seeds)));
+
+    Uint8List iv = secureRandom.nextBytes(16);
+
+    CBCBlockCipher cipher = CBCBlockCipher(AESEngine());
+    ParametersWithIV<KeyParameter> keyParameters = ParametersWithIV(KeyParameter(secretKey), iv);
+
+    PaddedBlockCipherParameters<ParametersWithIV<KeyParameter>, Null> params =
+        PaddedBlockCipherParameters<ParametersWithIV<KeyParameter>, Null>(keyParameters, null);
+
+    cipher.init(true, keyParameters);
+
+    PaddedBlockCipherImpl cipherImpl = PaddedBlockCipherImpl(PKCS7Padding(), cipher);
+    cipherImpl.init(true, params);
 
     Uint8List cipherText =
-        cipher.process(Uint8List.fromList(pad(Uint8List.fromList(fileContents.codeUnits), 128)));
+        cipherImpl.process(Uint8List.fromList(Uint8List.fromList(fileContents.codeUnits)));
+
+    // Prepend the IV to the ciphertext (for later decryption)
+    Uint8List result = Uint8List.fromList([...iv, ...cipherText]);
 
     setState(() {
-      encryptedTextAES = String.fromCharCodes(cipherText);
+      encryptedTextAES = String.fromCharCodes(result);
     });
 
-    return String.fromCharCodes(cipherText);
+    return String.fromCharCodes(result);
   }
 
   Uint8List pad(Uint8List bytes, int blockSize) {

@@ -39,6 +39,7 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Center(child: _screens[_currentIndex]),
       bottomNavigationBar: BottomNavigationBar(
+        showUnselectedLabels: true,
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
         items: const [
