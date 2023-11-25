@@ -106,7 +106,7 @@ class _SignFileWidgetState extends State<SignFileWidget> {
         throw StateError('Signer was not initialised for signature generation');
       }
 
-    var data = /*generateDigest(message, normalize: normalize)*/ message;
+      var data = message;//generateDigest(message, normalize: normalize);
       var out = Uint8List(_rsa.outputBlockSize);
       var len = _rsa.processBlock(data, 0, data.length, out, 0);
       return RSASignature(out.sublist(0, len));
@@ -130,6 +130,7 @@ class _SignFileWidgetState extends State<SignFileWidget> {
     RSASigner signer = RSASigner(SHA256Digest(), _digestIdentifierHex);
     signer.init(true, privateKey);
 
+      String.fromCharCodes(digest),
     Uint8List digest = signer.generateDigest(Uint8List.fromList(fileContents.codeUnits));
     File digestFile = await FileManager.saveToFile(
       "digest.txt",
