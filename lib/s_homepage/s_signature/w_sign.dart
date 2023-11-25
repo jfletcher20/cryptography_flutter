@@ -12,6 +12,8 @@ import 'package:pointycastle/digests/sha256.dart';
 import 'package:pointycastle/pointycastle.dart';
 import 'package:pointycastle/signers/rsa_signer.dart';
 
+const _digestIdentifierHex = "0609608648016503040201";
+
 class SignFileWidget extends StatefulWidget {
   const SignFileWidget({super.key});
 
@@ -75,7 +77,7 @@ class _SignFileWidgetState extends State<SignFileWidget> {
     if (selectedFile == null) return;
     final fileName = selectedFile!.path.split("\\").last.replaceAll(".txt", "");
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    String asym = await calculateDigestOfFile();
+    String asym = await digitalSignature();
     try {
       await FileManager.saveToFile(
         "${fileName}_digest_$timestamp.txt",
@@ -89,21 +91,59 @@ class _SignFileWidgetState extends State<SignFileWidget> {
     }
   }
 
-  Future<String> calculateDigestOfFile() async {
+  Future<String> digitalSignature() async {
     String fileContents = FileManager.readFromFile(selectedFile!);
 
     AsymmetricKeyParameter<RSAPrivateKey> privateKey =
         PrivateKeyParameter(await KeysManager.privateKey());
 
-    RSASigner signer = RSASigner(SHA256Digest(), "0609608648016503040201");
+    /* updated code in library to extract the function for the digest info */
+
+    /*
+    @override
+    RSASignature generateSignature(Uint8List message, {bool normalize = false}) {
+      if (!_forSigning) {
+        throw StateError('Signer was not initialised for signature generation');
+      }
+
+      var data = generateDigest(message, normalize: normalize);
+      var out = Uint8List(_rsa.outputBlockSize);
+      var len = _rsa.processBlock(data, 0, data.length, out, 0);
+      return RSASignature(out.sublist(0, len));
+    }
+
+    @override
+    Uint8List generateDigest(Uint8List message, {bool normalize = false}) {
+      if (!_forSigning) {
+        throw StateError('Signer was not initialised for signature generation');
+      }
+
+      var hash = Uint8List(_digest.digestSize);
+      _digest.reset();
+      _digest.update(message, 0, message.length);
+      _digest.doFinal(hash, 0);
+
+      return _derEncode(hash);
+    }
+    */
+
+    RSASigner signer = RSASigner(SHA256Digest(), _digestIdentifierHex);
     signer.init(true, privateKey);
 
-    RSASignature digest = signer.generateSignature(Uint8List.fromList(fileContents.codeUnits));
+    Uint8List digest = signer.generateDigest(Uint8List.fromList(fileContents.codeUnits));
+    File f = await FileManager.saveToFile(
+      "digest.txt",
+      String.fromCharCodes(digest),
+      createDir: true,
+      additionalPath: "signature",
+    ) as File;
 
-    setState(() {
-      digestText = String.fromCharCodes(digest.bytes);
-    });
+    fileContents = FileManager.readFromFile(f);
 
-    return String.fromCharCodes(digest.bytes);
+    RSASignature signature = signer.generateSignature(Uint8List.fromList(fileContents.codeUnits));
+
+    setState(() => digestText = String.fromCharCodes(signature.bytes));
+
+    return String.fromCharCodes(signature.bytes);
   }
 }
