@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:cryptography_flutter/file_management/u_file_creation.dart';
 import 'package:cryptography_flutter/w_file_contents.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pointycastle/api.dart';
@@ -18,9 +20,9 @@ class KeysScreen extends StatefulWidget {
 }
 
 class _KeysScreenState extends State<KeysScreen> {
-  String public = "javni_kljuc.txt";
-  String private = "privatni_kljuc.txt";
-  String secret = "tajni_kljuc.txt";
+  String public = "public_key.txt";
+  String private = "private_key.txt";
+  String secret = "secret_key.txt";
 
   GlobalKey<FileContentsWidgetState> publicKey = GlobalKey();
   GlobalKey<FileContentsWidgetState> privateKey = GlobalKey();
@@ -35,12 +37,40 @@ class _KeysScreenState extends State<KeysScreen> {
           wrap("Public key: ", FileContentsWidget(key: publicKey, fileName: public)),
           wrap("Private key: ", FileContentsWidget(key: privateKey, fileName: private)),
         ]),
-        ElevatedButton(
-            onPressed: () => genAsymmetricKeys(), child: const Text("Generate Asymmetric keys")),
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          const Icon(Icons.create),
+          ElevatedButton(
+            onPressed: () => genAsymmetricKeys(),
+            child: const Text("Generate Asymmetric Keys"),
+          ),
+        ]),
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          const Icon(Icons.import_export),
+          ElevatedButton(
+            onPressed: () => importPublicKey(),
+            child: const Text("Import Public Key"),
+          ),
+          ElevatedButton(
+            onPressed: () => importPrivateKey(),
+            child: const Text("Import Private Key"),
+          ),
+        ]),
         const SizedBox(height: 64),
         wrap("Secret key: ", FileContentsWidget(key: secretKey, fileName: secret)),
-        ElevatedButton(
-            onPressed: () async => await genSecretKey(), child: const Text("Generate Secret Key")),
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          const Icon(Icons.create),
+          ElevatedButton(
+            onPressed: () async => await genSecretKey(),
+            child: const Text("Generate Secret Key"),
+          ),
+        ]),
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          const Icon(Icons.import_export),
+          ElevatedButton(
+            onPressed: () async => await importSecretKey(),
+            child: const Text("Import Secret Key"),
+          ),
+        ]),
       ],
     );
   }
@@ -60,26 +90,36 @@ class _KeysScreenState extends State<KeysScreen> {
     RSAKeyGeneratorParameters keyParams = RSAKeyGeneratorParameters(BigInt.parse('65537'), 2048, 5);
     FortunaRandom secureRandom = FortunaRandom();
     Random seedRandom = Random.secure();
-
     List<int> seeds = [];
-    for (int i = 0; i < 32; i++) {
-      seeds.add(seedRandom.nextInt(256));
-    }
-
-    // alternatively, generate according to username as seed:
-    /* for (int i = 0; i < Auth.currentUser.username.length - 1; i++) {
-          seeds.add(Auth.currentUser.username.codeUnitAt(i));
-        }
-        for (int i = seeds.length; i < 32; i++) {
-          seeds.add(0);
-        } */
-
+    for (int i = 0; i < 32; i++) seeds.add(seedRandom.nextInt(256));
     secureRandom.seed(KeyParameter(Uint8List.fromList(seeds)));
-
     return (keyParams, secureRandom);
   }
 
   Future<void> genAsymmetricKeys() async {
+    bool? confirmation = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Generate Asymmetric Keys"),
+          content: const Text("Are you sure you want to generate new asymmetric keys? "
+              "This will overwrite any existing keys."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text("No"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text("Yes"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmation != true) return;
+
     // secure random key generator
     (RSAKeyGeneratorParameters, FortunaRandom) keyParameters = _keyParametersRSA();
 
@@ -100,6 +140,29 @@ class _KeysScreenState extends State<KeysScreen> {
   }
 
   Future<void> genSecretKey() async {
+    bool? confirmation = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Generate Secret Key"),
+          content: const Text("Are you sure you want to generate a new secret key? "
+              "This will overwrite any existing key."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text("No"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text("Yes"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmation != true) return;
+
     SecureRandom secureRandom = FortunaRandom();
     Random seedRandom = Random.secure();
 
@@ -127,5 +190,89 @@ class _KeysScreenState extends State<KeysScreen> {
 
   Future<void> saveSecretKey(String secretKey) async {
     await FileManager.saveToFile(secret, secretKey);
+  }
+
+  Future<void> importPublicKey() async {
+    String? publicKey = await _importKey();
+    if (publicKey != null && isValidPublicKey(publicKey)) {
+      await savePublicKey(publicKey);
+    } else {
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text("Invalid public key")));
+    }
+    setState(() {});
+  }
+
+  Future<void> importPrivateKey() async {
+    String? privateKey = await _importKey();
+    if (privateKey != null && isValidPrivateKey(privateKey)) {
+      await savePrivateKey(privateKey);
+    } else {
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text("Invalid private key")));
+    }
+    setState(() {});
+  }
+
+  Future<void> importSecretKey() async {
+    String? secretKey = await _importKey();
+    if (secretKey != null && isValidSecretKey(secretKey)) {
+      await saveSecretKey(secretKey);
+    } else {
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text("Invalid secret key")));
+    }
+    setState(() {});
+  }
+
+  bool isValidPrivateKey(String key) {
+    List<String> parts = key.split(",");
+    if (parts.length != 4) return false;
+    try {
+      BigInt.parse(parts[0].trim());
+      BigInt.parse(parts[1]);
+      BigInt.parse(parts[2].trim());
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
+
+  bool isValidPublicKey(String key) {
+    List<String> parts = key.split(",");
+    if (parts.length != 2) return false;
+    try {
+      BigInt.parse(parts[0]);
+      BigInt.parse(parts[1]);
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
+
+  bool isValidSecretKey(String key) {
+    try {
+      base64.decode(key);
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
+
+  Future<String?> _importKey() async {
+    String? key;
+    try {
+      key = await FilePicker.platform.pickFiles().then((result) async {
+        if (result != null) return File(result.files.single.path!).readAsString();
+        return null;
+      });
+    } catch (e) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+    return key;
   }
 }

@@ -34,7 +34,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Welcome, ${Auth.currentUser.username}"),
+        title: Text("Operating with keys of user ${Auth.currentUser.username}"),
         actions: [IconButton(onPressed: () => _showLoginScreen(), icon: const Icon(Icons.person))],
       ),
       body: Center(child: _screens[_currentIndex]),

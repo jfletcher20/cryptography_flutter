@@ -97,40 +97,11 @@ class _SignFileWidgetState extends State<SignFileWidget> {
     AsymmetricKeyParameter<RSAPrivateKey> privateKey =
         PrivateKeyParameter(await KeysManager.privateKey());
 
-    /* updated code in library to extract the function for the digest info */
-
-    /*
-    @override
-    RSASignature generateSignature(Uint8List message, {bool normalize = false}) {
-      if (!_forSigning) {
-        throw StateError('Signer was not initialised for signature generation');
-      }
-
-      var data = message;//generateDigest(message, normalize: normalize);
-      var out = Uint8List(_rsa.outputBlockSize);
-      var len = _rsa.processBlock(data, 0, data.length, out, 0);
-      return RSASignature(out.sublist(0, len));
-    }
-
-    @override
-    Uint8List generateDigest(Uint8List message, {bool normalize = false}) {
-      if (!_forSigning) {
-        throw StateError('Signer was not initialised for signature generation');
-      }
-
-      var hash = Uint8List(_digest.digestSize);
-      _digest.reset();
-      _digest.update(message, 0, message.length);
-      _digest.doFinal(hash, 0);
-
-      return _derEncode(hash);
-    }
-    */
-
     RSASigner signer = RSASigner(SHA256Digest(), _digestIdentifierHex);
     signer.init(true, privateKey);
 
-    Uint8List digest = signer.generateDigest(Uint8List.fromList(fileContents.codeUnits));
+    final hash = SHA256Digest();
+    Uint8List digest = hash.process(Uint8List.fromList(fileContents.codeUnits));
     File digestFile = await FileManager.saveToFile(
       "digest.txt",
       String.fromCharCodes(digest),

@@ -9,7 +9,8 @@ import 'package:path_provider/path_provider.dart';
 class FileContentsWidget extends StatefulWidget {
   final File? file;
   final String? fileName;
-  const FileContentsWidget({super.key, this.fileName, this.file});
+  final bool canBeCopied;
+  const FileContentsWidget({super.key, this.fileName, this.file, this.canBeCopied = true});
 
   @override
   State<FileContentsWidget> createState() => FileContentsWidgetState();
