@@ -5,7 +5,7 @@ import 'package:cryptography_flutter/data/d_theme.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
-  await Auth.safeLogin(username: "Yourself");
+  await Auth.safeLogin(username: "You", index: 0);
   runApp(const MainApp());
 }
 

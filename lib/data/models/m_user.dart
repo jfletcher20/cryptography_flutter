@@ -1,6 +1,7 @@
 class User {
   final String username;
-  User({required this.username});
+  final int index;
+  const User({required this.username, required this.index});
   @override
   String toString() => username;
 }

@@ -13,22 +13,20 @@ class Auth {
   static User get currentUser => _currentUser;
   static String get userPath => "${DirectoryManager.appDocsDirectory}/${_currentUser.username}";
 
-  static bool login({String? username, User? user}) {
+  static bool login({String? username, User? user, required int index}) {
     if (username == null && user == null)
       return false;
     else if (username != null)
-      _currentUser = User(username: username);
+      _currentUser = User(username: username, index: index);
     else
       _currentUser = user!;
     return true;
   }
 
   /// Login safely (create directory if needed)
-  static Future<bool> safeLogin({String? username, User? user}) async {
-    bool successfulLogin = login(username: username, user: user);
-    if (successfulLogin) {
-      await _safeLogin();
-    }
+  static Future<bool> safeLogin({String? username, User? user, required int index}) async {
+    bool successfulLogin = login(username: username, user: user, index: index);
+    if (successfulLogin) await _safeLogin();
     return successfulLogin;
   }
 

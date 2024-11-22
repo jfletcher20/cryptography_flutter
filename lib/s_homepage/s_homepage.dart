@@ -30,12 +30,21 @@ class _HomePageState extends State<HomePage> {
     ];
   }
 
+  String get user => Auth.currentUser.username;
+  String get wrapUserText => Auth.currentUser.index == 0 ? "Your keys" : "$user's keys";
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Operating with keys of user ${Auth.currentUser.username}"),
-        actions: [IconButton(onPressed: () => _showLoginScreen(), icon: const Icon(Icons.person))],
+        title: Text("Operating with $wrapUserText"),
+        actions: [
+          ElevatedButton.icon(
+            onPressed: () => _showLoginScreen(),
+            icon: const Icon(Icons.person),
+            label: const Text("Change profile"),
+          )
+        ],
       ),
       body: Center(child: _screens[_currentIndex]),
       bottomNavigationBar: BottomNavigationBar(

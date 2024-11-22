@@ -20,9 +20,16 @@ class _LoginScreenState extends State<LoginScreen> {
   };
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: ListView(
-        children: users.map((username) => LoginWidget(user: User(username: username))).toList(),
+    return Scaffold(
+      appBar: AppBar(title: const Text("Choose whose keys to operate with")),
+      body: ListView(
+        children: List.generate(
+          users.length,
+          (index) => LoginWidget(
+            user: User(username: users.elementAt(index), index: index),
+            index: index,
+          ),
+        ),
       ),
     );
   }
