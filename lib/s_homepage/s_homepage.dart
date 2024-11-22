@@ -62,6 +62,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showLoginScreen() async {
+    setState(() => _currentIndex = 0);
     await Navigator.of(context).push(MaterialPageRoute(builder: (context) => const LoginScreen()));
     if (context.mounted) {
       setState(() {

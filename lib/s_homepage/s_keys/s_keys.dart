@@ -24,10 +24,6 @@ class _KeysScreenState extends State<KeysScreen> with SingleTickerProviderStateM
   String private = "private_key.txt";
   String secret = "secret_key.txt";
 
-  GlobalKey<FileContentsWidgetState> publicKey = GlobalKey();
-  GlobalKey<FileContentsWidgetState> privateKey = GlobalKey();
-  GlobalKey<FileContentsWidgetState> secretKey = GlobalKey();
-
   late TabController tabController;
   final List<Widget> _tabs = const [Tab(text: "Asymmetric Keys"), Tab(text: "Symmetric Keys")];
 
@@ -50,10 +46,7 @@ class _KeysScreenState extends State<KeysScreen> with SingleTickerProviderStateM
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Column(children: [
-                      wrap("Public key: ", FileContentsWidget(key: publicKey, fileName: public)),
-                      wrap("Private key: ", FileContentsWidget(key: privateKey, fileName: private)),
-                    ]),
+                    Column(children: [publicKeyDisplay, privateKeyDisplay]),
                     Container(
                       padding: const EdgeInsets.all(16),
                       child: Column(children: [
@@ -87,7 +80,7 @@ class _KeysScreenState extends State<KeysScreen> with SingleTickerProviderStateM
               ),
               Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  wrap("Secret key: ", FileContentsWidget(key: secretKey, fileName: secret)),
+                  secretKeyDisplay,
                   Container(
                     padding: const EdgeInsets.all(16),
                     child: Column(children: [
@@ -114,6 +107,18 @@ class _KeysScreenState extends State<KeysScreen> with SingleTickerProviderStateM
         ),
       ],
     );
+  }
+
+  Widget get secretKeyDisplay {
+    return wrap("Secret key: ", FileContentsWidget(fileName: secret));
+  }
+
+  Widget get publicKeyDisplay {
+    return wrap("Public key: ", FileContentsWidget(fileName: public));
+  }
+
+  Widget get privateKeyDisplay {
+    return wrap("Private key: ", FileContentsWidget(fileName: private));
   }
 
   Widget wrap(String label, Widget child) {
@@ -208,9 +213,9 @@ class _KeysScreenState extends State<KeysScreen> with SingleTickerProviderStateM
     secureRandom.seed(KeyParameter(Uint8List.fromList(seeds)));
 
     KeyParameter params = KeyParameter(secureRandom.nextBytes(32));
-    String encodedKey = base64.encode(params.key);
+    String secretKey = base64.encode(params.key);
 
-    await saveSecretKey(encodedKey);
+    await saveSecretKey(secretKey);
     setState(() {});
   }
 

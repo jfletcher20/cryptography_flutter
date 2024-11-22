@@ -52,8 +52,8 @@ class FileManager {
   static Future<(String, String)> readAsymmetricKeyFromFile() async {
     try {
       final Directory directory = await getApplicationDocumentsDirectory();
-      final File public = File("${directory.path}/${Auth.userPath}/javni_kljuc.txt");
-      final File private = File("${directory.path}/${Auth.userPath}/privatni_kljuc.txt");
+      final File public = File("${directory.path}/${Auth.userPath}/public_key.txt");
+      final File private = File("${directory.path}/${Auth.userPath}/private_key.txt");
       return (public.readAsStringSync(), private.readAsStringSync());
     } catch (e) {
       print("Error reading key: $e");
@@ -64,7 +64,7 @@ class FileManager {
   static Future<String> readSecretKeyFromFile() async {
     try {
       final Directory directory = await getApplicationDocumentsDirectory();
-      final File secret = File("${directory.path}/${Auth.userPath}/tajni_kljuc.txt");
+      final File secret = File("${directory.path}/${Auth.userPath}/secret_key.txt");
       return secret.readAsStringSync();
     } catch (e) {
       print("Error reading key: $e");
