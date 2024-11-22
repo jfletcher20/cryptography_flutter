@@ -1,5 +1,6 @@
 import 'package:cryptography_flutter/s_homepage/s_signature/w_sign.dart';
 import 'package:cryptography_flutter/s_homepage/s_signature/w_verify.dart';
+import 'package:cryptography_flutter/s_homepage/w_not_yet_implemented.dart';
 import 'package:flutter/material.dart';
 
 class SignatureScreen extends StatefulWidget {
@@ -31,7 +32,12 @@ class _SignatureScreenState extends State<SignatureScreen> with SingleTickerProv
               controller: tabController,
               children: const [
                 Center(child: SignFileWidget()),
-                Center(child: VerifySignatureWidget()),
+                // Center(child: VerifySignatureWidget()),
+                Center(
+                  child: NotYetImplementedWidget(
+                    text: "Due to library updates, this feature needs to be reimplemented.",
+                  ),
+                ),
               ],
             ),
           ),

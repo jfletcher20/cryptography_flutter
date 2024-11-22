@@ -31,8 +31,13 @@ class _VerifySignatureWidgetState extends State<VerifySignatureWidget> {
       children: [
         Center(
             child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [_originalFilePicker, const SizedBox(width: 32), _signedFilePicker])),
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _originalFilePicker,
+            const SizedBox(width: 32),
+            _signedFilePicker,
+          ],
+        )),
         const SizedBox(height: 64),
         ..._verificationResultWidget,
         ElevatedButton(
@@ -46,7 +51,13 @@ class _VerifySignatureWidgetState extends State<VerifySignatureWidget> {
   Widget get _originalFilePicker {
     return Column(
       children: [
-        ...wrap("Original file: ", Text(originalFile?.path ?? "None")),
+        ...wrap(
+          "Original file: ",
+          FileContentsWidget(
+            contentOverride: originalFile?.path ?? "None",
+            useErrorStyle: originalFile == null,
+          ),
+        ),
         ...wrap("File contents: ", FileContentsWidget(file: originalFile)),
         ElevatedButton(onPressed: _pickOriginalFile, child: const Text("Select Original File")),
       ],
@@ -56,7 +67,13 @@ class _VerifySignatureWidgetState extends State<VerifySignatureWidget> {
   Widget get _signedFilePicker {
     return Column(
       children: [
-        ...wrap("Signed file: ", Text(signedFile?.path ?? "None")),
+        ...wrap(
+          "Signed file: ",
+          FileContentsWidget(
+            contentOverride: signedFile?.path ?? "None",
+            useErrorStyle: signedFile == null,
+          ),
+        ),
         ...wrap("File contents: ", FileContentsWidget(file: signedFile)),
         ElevatedButton(onPressed: _pickSignedFile, child: const Text("Select Signed File")),
       ],
@@ -75,14 +92,7 @@ class _VerifySignatureWidgetState extends State<VerifySignatureWidget> {
   }
 
   List<Widget> wrap(String label, Widget child) {
-    return [
-      Text(label),
-      Container(
-        padding: const EdgeInsets.all(20),
-        constraints: const BoxConstraints(maxHeight: 100, maxWidth: 500),
-        child: SingleChildScrollView(child: child),
-      ),
-    ];
+    return [Text(label), child];
   }
 
   Future<void> _pickOriginalFile() async {

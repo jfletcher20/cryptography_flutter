@@ -28,17 +28,40 @@ class _SignFileWidgetState extends State<SignFileWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        ...wrap("Selected file: ", Text(selectedFile?.path ?? "None")),
-        ...wrap("File contents: ", FileContentsWidget(file: selectedFile)),
-        ElevatedButton(onPressed: _pickFile, child: const Text("Select File")),
-        const SizedBox(height: 16),
-        if (digestText.isNotEmpty) ..._digestTextWidget,
-        ElevatedButton(
-          onPressed: isDigestButtonEnabled ? _calculateDigestOfFile : null,
-          child: const Text("Calculate Digest"),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ...wrap(
+              "Selected file: ",
+              FileContentsWidget(
+                contentOverride: selectedFile?.path ?? "None",
+                useErrorStyle: selectedFile == null,
+              ),
+            ),
+            ...wrap("File contents: ", FileContentsWidget(file: selectedFile)),
+            ElevatedButton(onPressed: _pickFile, child: const Text("Select File")),
+          ],
+        ),
+        const SizedBox(width: 32),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ...wrap(
+              "Output file: ",
+              FileContentsWidget(
+                contentOverride: digestFileOutput?.path.replaceAll("/", "\\") ?? "None",
+                useErrorStyle: digestFileOutput == null,
+              ),
+            ),
+            ..._digestTextWidget,
+            ElevatedButton(
+              onPressed: isDigestButtonEnabled ? _calculateDigestOfFile : null,
+              child: const Text("Calculate Digest"),
+            ),
+          ],
         ),
       ],
     );
@@ -48,19 +71,16 @@ class _SignFileWidgetState extends State<SignFileWidget> {
     TextStyle style = Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.green[200]);
     return wrap(
       "Digest text: ",
-      Text(digestText, style: style),
+      FileContentsWidget(
+        contentOverride: digestText.isNotEmpty ? digestText : "Not calculated yet",
+        styleOverride: style,
+        useErrorStyle: digestText.isEmpty,
+      ),
     );
   }
 
   List<Widget> wrap(String label, Widget child) {
-    return [
-      Text(label),
-      Container(
-        padding: const EdgeInsets.all(20),
-        constraints: const BoxConstraints(maxHeight: 100, maxWidth: 500),
-        child: SingleChildScrollView(child: child),
-      ),
-    ];
+    return [Text(label), child];
   }
 
   Future<void> _pickFile() async {
@@ -73,20 +93,23 @@ class _SignFileWidgetState extends State<SignFileWidget> {
     }
   }
 
+  File? digestFileOutput;
+
   Future<void> _calculateDigestOfFile() async {
     if (selectedFile == null) return;
     final fileName = selectedFile!.path.split("\\").last.replaceAll(".txt", "");
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     String asym = await digitalSignature();
     try {
-      await FileManager.saveToFile(
+      File? digestFile = await FileManager.saveToFile(
         "${fileName}_digest_$timestamp.txt",
         asym,
         createDir: true,
         additionalPath: "signature/digest",
       );
+      setState(() => digestFileOutput = digestFile);
     } catch (e) {
-      if (context.mounted)
+      if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }

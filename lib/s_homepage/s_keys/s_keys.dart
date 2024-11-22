@@ -19,7 +19,7 @@ class KeysScreen extends StatefulWidget {
   State<KeysScreen> createState() => _KeysScreenState();
 }
 
-class _KeysScreenState extends State<KeysScreen> {
+class _KeysScreenState extends State<KeysScreen> with SingleTickerProviderStateMixin {
   String public = "public_key.txt";
   String private = "private_key.txt";
   String secret = "secret_key.txt";
@@ -28,62 +28,85 @@ class _KeysScreenState extends State<KeysScreen> {
   GlobalKey<FileContentsWidgetState> privateKey = GlobalKey();
   GlobalKey<FileContentsWidgetState> secretKey = GlobalKey();
 
+  late TabController tabController;
+  final List<Widget> _tabs = const [Tab(text: "Asymmetric Keys"), Tab(text: "Symmetric Keys")];
+
+  @override
+  void initState() {
+    super.initState();
+    tabController = TabController(length: 2, vsync: this);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          wrap("Public key: ", FileContentsWidget(key: publicKey, fileName: public)),
-          wrap("Private key: ", FileContentsWidget(key: privateKey, fileName: private)),
-        ]),
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          const Icon(Icons.create),
-          ElevatedButton(
-            onPressed: () => genAsymmetricKeys(),
-            child: const Text("Generate Asymmetric Keys"),
+        TabBar(controller: tabController, tabs: _tabs),
+        Expanded(
+          child: TabBarView(
+            controller: tabController,
+            children: [
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Column(children: [
+                      wrap("Public key: ", FileContentsWidget(key: publicKey, fileName: public)),
+                      wrap("Private key: ", FileContentsWidget(key: privateKey, fileName: private)),
+                    ]),
+                    Column(children: [
+                      Row(children: [
+                        const Icon(Icons.create),
+                        ElevatedButton(
+                          onPressed: () => genAsymmetricKeys(),
+                          child: const Text("Generate Asymmetric Keys"),
+                        ),
+                      ]),
+                      Row(children: [
+                        const Icon(Icons.import_export),
+                        ElevatedButton(
+                          onPressed: () => importPublicKey(),
+                          child: const Text("Import Public Key"),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => importPrivateKey(),
+                          child: const Text("Import Private Key"),
+                        ),
+                      ]),
+                    ]),
+                  ]),
+                ],
+              ),
+              Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  wrap("Secret key: ", FileContentsWidget(key: secretKey, fileName: secret)),
+                  Column(children: [
+                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      const Icon(Icons.create),
+                      ElevatedButton(
+                        onPressed: () async => await genSecretKey(),
+                        child: const Text("Generate Secret Key"),
+                      ),
+                    ]),
+                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      const Icon(Icons.import_export),
+                      ElevatedButton(
+                        onPressed: () async => await importSecretKey(),
+                        child: const Text("Import Secret Key"),
+                      ),
+                    ]),
+                  ]),
+                ]),
+              ]),
+            ],
           ),
-        ]),
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          const Icon(Icons.import_export),
-          ElevatedButton(
-            onPressed: () => importPublicKey(),
-            child: const Text("Import Public Key"),
-          ),
-          ElevatedButton(
-            onPressed: () => importPrivateKey(),
-            child: const Text("Import Private Key"),
-          ),
-        ]),
-        const SizedBox(height: 64),
-        wrap("Secret key: ", FileContentsWidget(key: secretKey, fileName: secret)),
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          const Icon(Icons.create),
-          ElevatedButton(
-            onPressed: () async => await genSecretKey(),
-            child: const Text("Generate Secret Key"),
-          ),
-        ]),
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          const Icon(Icons.import_export),
-          ElevatedButton(
-            onPressed: () async => await importSecretKey(),
-            child: const Text("Import Secret Key"),
-          ),
-        ]),
+        ),
       ],
     );
   }
 
   Widget wrap(String label, Widget child) {
-    return Column(children: [
-      Text(label),
-      Container(
-        padding: const EdgeInsets.all(20),
-        constraints: const BoxConstraints(maxHeight: 100, maxWidth: 500),
-        child: SingleChildScrollView(child: child),
-      ),
-    ]);
+    return Column(children: [Text(label), child]);
   }
 
   (RSAKeyGeneratorParameters, FortunaRandom) _keyParametersRSA() {

@@ -4,13 +4,27 @@ import 'dart:io';
 
 import 'package:cryptography_flutter/s_auth/u_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 class FileContentsWidget extends StatefulWidget {
   final File? file;
   final String? fileName;
   final bool canBeCopied;
-  const FileContentsWidget({super.key, this.fileName, this.file, this.canBeCopied = true});
+  final int? maxLines;
+  final String contentOverride;
+  final TextStyle? styleOverride;
+  final bool useErrorStyle;
+  const FileContentsWidget({
+    super.key,
+    this.fileName,
+    this.file,
+    this.maxLines,
+    this.contentOverride = "",
+    this.styleOverride,
+    this.canBeCopied = true,
+    this.useErrorStyle = false,
+  });
 
   @override
   State<FileContentsWidget> createState() => FileContentsWidgetState();
@@ -19,9 +33,50 @@ class FileContentsWidget extends StatefulWidget {
 class FileContentsWidgetState extends State<FileContentsWidget> {
   String fileContents = "";
 
+  bool get isValid =>
+      !widget.useErrorStyle &&
+      (widget.contentOverride.isNotEmpty ||
+          widget.canBeCopied &&
+              fileContents != "-1" &&
+              !(widget.file == null && widget.fileName == null));
+
   @override
   Widget build(BuildContext context) {
-    final TextStyle style = Theme.of(context).textTheme.displaySmall!;
+    return InkWell(
+      onTap: isValid
+          ? () {
+              if (widget.canBeCopied) {
+                Clipboard.setData(ClipboardData(text: widget.contentOverride + fileContents));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Copied to clipboard")),
+                );
+              }
+            }
+          : null,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        margin: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          border: Border.all(color: isValid ? Colors.purpleAccent : Colors.red[200]!),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        constraints: const BoxConstraints(maxHeight: 100, maxWidth: 300),
+        child: SingleChildScrollView(
+          child: widget.contentOverride.isNotEmpty
+              ? Text(widget.contentOverride,
+                  style: widget.useErrorStyle
+                      ? style.copyWith(color: Colors.red[200])
+                      : widget.styleOverride ?? style)
+              : _fileContents,
+        ),
+      ),
+    );
+  }
+
+  TextStyle get style => Theme.of(context).textTheme.displaySmall!;
+
+  Widget get _fileContents {
     if (widget.file == null && widget.fileName == null)
       return Text("No file was specified.", style: style.copyWith(color: Colors.red[200]));
     else if (widget.fileName != null)
@@ -29,15 +84,17 @@ class FileContentsWidgetState extends State<FileContentsWidget> {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             fileContents = snapshot.data as String;
-            if (fileContents == "-1") {
-              return Text(
-                "File does not exist",
-                style: style.copyWith(color: Colors.red[200]),
-              );
-            } else {
-              fileContents = snapshot.data as String;
-              return Text(fileContents, style: style);
-            }
+            return (fileContents == "-1")
+                ? Text(
+                    maxLines: widget.maxLines,
+                    "File does not exist",
+                    style: style.copyWith(color: Colors.red[200]),
+                  )
+                : Text(
+                    maxLines: widget.maxLines,
+                    fileContents,
+                    style: widget.useErrorStyle ? style.copyWith(color: Colors.red[200]) : style,
+                  );
           } else {
             return const CircularProgressIndicator();
           }
@@ -46,7 +103,10 @@ class FileContentsWidgetState extends State<FileContentsWidget> {
       );
     else {
       fileContents = widget.file!.readAsStringSync();
-      return Text(fileContents, style: style);
+      return Text(
+        fileContents,
+        style: widget.useErrorStyle ? style.copyWith(color: Colors.red[200]) : style,
+      );
     }
   }
 

@@ -50,7 +50,7 @@ class _EncryptScreenState extends State<EncryptScreen> {
 
   Widget get _asymmetricEncryptionWidget {
     return Column(children: [
-      if (encryptedTextRSA.isNotEmpty) ..._encryptedTextRSAWidget,
+      ..._encryptedTextRSAWidget,
       ElevatedButton(
         onPressed: isEncryptButtonEnabled ? _encryptFileRSA : null,
         child: const Text("Asymmetric Encryption"),
@@ -60,7 +60,7 @@ class _EncryptScreenState extends State<EncryptScreen> {
 
   Widget get _symmetricEncryptionWidget {
     return Column(children: [
-      if (encryptedTextAES.isNotEmpty) ..._encryptedTextAESWidget,
+      ..._encryptedTextAESWidget,
       ElevatedButton(
         onPressed: isEncryptButtonEnabled ? _encryptFileAES : null,
         child: const Text("Symmetric Encryption"),
@@ -72,7 +72,11 @@ class _EncryptScreenState extends State<EncryptScreen> {
     TextStyle style = Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.green[200]);
     return wrap(
       "Encrypted text: ",
-      Text(encryptedTextRSA, style: style),
+      FileContentsWidget(
+        contentOverride: encryptedTextRSA.isNotEmpty ? encryptedTextRSA : "Not encrypted yet.",
+        styleOverride: encryptedTextRSA.isNotEmpty ? style : null,
+        useErrorStyle: encryptedTextRSA.isEmpty,
+      ),
     );
   }
 
@@ -80,19 +84,16 @@ class _EncryptScreenState extends State<EncryptScreen> {
     TextStyle style = Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.green[200]);
     return wrap(
       "Encrypted text: ",
-      Text(encryptedTextAES, style: style),
+      FileContentsWidget(
+        contentOverride: encryptedTextAES.isNotEmpty ? encryptedTextAES : "Not encrypted yet.",
+        styleOverride: encryptedTextAES.isNotEmpty ? style : null,
+        useErrorStyle: encryptedTextAES.isEmpty,
+      ),
     );
   }
 
   List<Widget> wrap(String label, Widget child) {
-    return [
-      Text(label),
-      Container(
-        padding: const EdgeInsets.all(20),
-        constraints: const BoxConstraints(maxHeight: 100, maxWidth: 500),
-        child: SingleChildScrollView(child: child),
-      ),
-    ];
+    return [Text(label), child];
   }
 
   Future<void> _pickFile() async {
