@@ -11,20 +11,19 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final Set<String> users = {
-    "Joshua",
-    "Quinn",
-    "Taissa",
-    "Dario",
-    "Noa",
-    "Stjepan",
-    "Marko",
-    "Mislav",
-    "Lovro",
+    "You",
+    "Correspondent 1",
+    "Correspondent 2",
+    "Correspondent 3",
+    "Correspondent 4",
+    "Correspondent 5",
   };
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: users.map((username) => LoginWidget(user: User(username: username))).toList(),
+    return SafeArea(
+      child: ListView(
+        children: users.map((username) => LoginWidget(user: User(username: username))).toList(),
+      ),
     );
   }
 }

@@ -1,48 +1,21 @@
-import 'package:cryptography_flutter/s_homepage/s_signature/w_sign.dart';
-import 'package:cryptography_flutter/s_homepage/s_signature/w_verify.dart';
+import 'package:cryptography_flutter/s_homepage/s_tab_screen.dart';
 import 'package:cryptography_flutter/s_homepage/w_not_yet_implemented.dart';
+import 'package:cryptography_flutter/s_homepage/s_signature/w_sign.dart';
 import 'package:flutter/material.dart';
 
-class SignatureScreen extends StatefulWidget {
-  const SignatureScreen({super.key});
-
-  @override
-  State<SignatureScreen> createState() => _SignatureScreenState();
-}
-
-class _SignatureScreenState extends State<SignatureScreen> with SingleTickerProviderStateMixin {
-  late TabController tabController;
-
-  final List<Widget> _tabs = const [Tab(text: "Sign"), Tab(text: "Verify")];
-
-  @override
-  void initState() {
-    super.initState();
-    tabController = TabController(length: 2, vsync: this);
-  }
+class SignatureScreen extends StatelessWidget {
+  const SignatureScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: [
-          TabBar(controller: tabController, tabs: _tabs),
-          Expanded(
-            child: TabBarView(
-              controller: tabController,
-              children: const [
-                Center(child: SignFileWidget()),
-                // Center(child: VerifySignatureWidget()),
-                Center(
-                  child: NotYetImplementedWidget(
-                    text: "Due to library updates, this feature needs to be reimplemented.",
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return TabScreen(
+      tabNames: const ["Sign", "Verify"],
+      children: const [
+        SignFileWidget(),
+        NotYetImplementedWidget(
+          text: "Due to library updates, this feature needs to be reimplemented.",
+        ),
+      ],
     );
   }
 }

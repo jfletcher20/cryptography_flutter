@@ -15,6 +15,7 @@ class FileContentsWidget extends StatefulWidget {
   final String contentOverride;
   final TextStyle? styleOverride;
   final bool useErrorStyle;
+  final ({bool horizontal, bool vertical}) maxExtents;
   const FileContentsWidget({
     super.key,
     this.fileName,
@@ -24,6 +25,10 @@ class FileContentsWidget extends StatefulWidget {
     this.styleOverride,
     this.canBeCopied = true,
     this.useErrorStyle = false,
+    this.maxExtents = (
+      horizontal: true,
+      vertical: false,
+    ),
   });
 
   @override
@@ -61,7 +66,12 @@ class FileContentsWidgetState extends State<FileContentsWidget> {
           border: Border.all(color: isValid ? Colors.purpleAccent : Colors.red[200]!),
           borderRadius: BorderRadius.circular(12),
         ),
-        constraints: const BoxConstraints(maxHeight: 100, maxWidth: 300),
+        constraints: BoxConstraints(
+          maxHeight: 100,
+          maxWidth: 300,
+          minWidth: widget.maxExtents.horizontal ? 300 : 0,
+          minHeight: widget.maxExtents.vertical ? 100 : 0,
+        ),
         child: SingleChildScrollView(
           child: widget.contentOverride.isNotEmpty
               ? Text(widget.contentOverride,

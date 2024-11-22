@@ -6,6 +6,7 @@ import 'package:cryptography_flutter/file_management/u_keys.dart';
 import 'package:cryptography_flutter/w_file_contents.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:pointycastle/api.dart';
 import 'package:pointycastle/asymmetric/api.dart';
 import 'package:pointycastle/asymmetric/rsa.dart';
@@ -15,32 +16,37 @@ import 'package:pointycastle/padded_block_cipher/padded_block_cipher_impl.dart';
 import 'package:pointycastle/paddings/pkcs7.dart';
 import 'package:pointycastle/random/fortuna_random.dart';
 
-class EncryptScreen extends StatefulWidget {
-  const EncryptScreen({super.key});
+class EncryptWidget extends StatefulWidget {
+  const EncryptWidget({super.key});
 
   @override
-  State<EncryptScreen> createState() => _EncryptScreenState();
+  State<EncryptWidget> createState() => _EncryptWidgetState();
 }
 
-class _EncryptScreenState extends State<EncryptScreen> {
+class _EncryptWidgetState extends State<EncryptWidget> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   File? selectedFile;
   bool isEncryptButtonEnabled = false;
   String encryptedTextRSA = "", encryptedTextAES = "";
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        ...wrap("Selected file: ", Text(selectedFile?.path ?? "None")),
-        ...wrap("File contents: ", FileContentsWidget(file: selectedFile)),
-        ElevatedButton(onPressed: _pickFile, child: const Text("Select File")),
-        const SizedBox(height: 16),
+        fileInput,
+        const Divider(),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _asymmetricEncryptionWidget,
-            const SizedBox(width: 64),
+            Opacity(
+              opacity: 0,
+              child: ElevatedButton(onPressed: _pickFile, child: const Text("Select File")),
+            ),
             _symmetricEncryptionWidget,
           ],
         )
@@ -48,23 +54,88 @@ class _EncryptScreenState extends State<EncryptScreen> {
     );
   }
 
+  Widget get fileInput {
+    return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+      Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: wrap(
+          "Selected file: ",
+          FileContentsWidget(
+            contentOverride: selectedFile?.path ?? "None",
+            useErrorStyle: selectedFile == null,
+            maxExtents: (horizontal: true, vertical: selectedFile != null),
+          ),
+        ),
+      ),
+      ElevatedButton(onPressed: _pickFile, child: const Text("Select File")),
+      Column(
+        children: wrap(
+          "File contents: ",
+          FileContentsWidget(
+            file: selectedFile,
+            useErrorStyle: selectedFile == null,
+            maxExtents: (horizontal: true, vertical: selectedFile != null),
+          ),
+        ),
+      ),
+    ]);
+  }
+
+  File? _encryptedRSAFile, _encryptedAESFile;
+
   Widget get _asymmetricEncryptionWidget {
     return Column(children: [
       ..._encryptedTextRSAWidget,
-      ElevatedButton(
-        onPressed: isEncryptButtonEnabled ? _encryptFileRSA : null,
-        child: const Text("Asymmetric Encryption"),
-      ),
+      Row(children: [
+        ElevatedButton(
+          onPressed: isEncryptButtonEnabled ? _encryptFileRSA : null,
+          child: const Text("Asymmetric Encryption"),
+        ),
+        ElevatedButton(
+          onPressed: _encryptedRSAFile == null
+              ? null
+              : () {
+                  Clipboard.setData(
+                      ClipboardData(text: _encryptedRSAFile!.path.replaceAll("/", "\\")));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        "Copied ${_encryptedRSAFile!.path.replaceAll("/", "\\")} to clipboard",
+                      ),
+                    ),
+                  );
+                },
+          child: const Text("Copy path"),
+        ),
+      ]),
     ]);
   }
 
   Widget get _symmetricEncryptionWidget {
     return Column(children: [
       ..._encryptedTextAESWidget,
-      ElevatedButton(
-        onPressed: isEncryptButtonEnabled ? _encryptFileAES : null,
-        child: const Text("Symmetric Encryption"),
-      ),
+      Row(children: [
+        ElevatedButton(
+          onPressed: isEncryptButtonEnabled ? _encryptFileAES : null,
+          child: const Text("Symmetric Encryption"),
+        ),
+        ElevatedButton(
+          onPressed: _encryptedAESFile == null
+              ? null
+              : () {
+                  Clipboard.setData(
+                      ClipboardData(text: _encryptedAESFile!.path.replaceAll("/", "\\")));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        "Copied ${_encryptedAESFile!.path.replaceAll("/", "\\")} to clipboard",
+                      ),
+                    ),
+                  );
+                },
+          child: const Text("Copy path"),
+        ),
+      ]),
     ]);
   }
 
@@ -76,6 +147,7 @@ class _EncryptScreenState extends State<EncryptScreen> {
         contentOverride: encryptedTextRSA.isNotEmpty ? encryptedTextRSA : "Not encrypted yet.",
         styleOverride: encryptedTextRSA.isNotEmpty ? style : null,
         useErrorStyle: encryptedTextRSA.isEmpty,
+        maxExtents: (horizontal: true, vertical: encryptedTextRSA.isNotEmpty),
       ),
     );
   }
@@ -88,6 +160,7 @@ class _EncryptScreenState extends State<EncryptScreen> {
         contentOverride: encryptedTextAES.isNotEmpty ? encryptedTextAES : "Not encrypted yet.",
         styleOverride: encryptedTextAES.isNotEmpty ? style : null,
         useErrorStyle: encryptedTextAES.isEmpty,
+        maxExtents: (horizontal: true, vertical: encryptedTextAES.isNotEmpty),
       ),
     );
   }
@@ -116,26 +189,29 @@ class _EncryptScreenState extends State<EncryptScreen> {
   Future<void> _encryptFileAES() async {
     if (selectedFile == null) return;
     try {
-      await FileManager.saveToFile(
+      File? result = await FileManager.saveToFile(
         getFileName("symmetric"),
         await symmetricEncryption(),
         additionalPath: "symmetric_encryption",
         createDir: true,
       );
+      if (mounted) setState(() => _encryptedAESFile = result);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 
   Future<void> _encryptFileRSA() async {
     if (selectedFile == null) return;
     try {
-      await FileManager.saveToFile(
+      File? result = await FileManager.saveToFile(
         getFileName("asymmetric"),
         await asymmetricEncryption(),
         additionalPath: "asymmetric_encryption",
         createDir: true,
       );
+      if (mounted) setState(() => _encryptedRSAFile = result);
     } catch (e) {
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));

@@ -54,48 +54,59 @@ class _KeysScreenState extends State<KeysScreen> with SingleTickerProviderStateM
                       wrap("Public key: ", FileContentsWidget(key: publicKey, fileName: public)),
                       wrap("Private key: ", FileContentsWidget(key: privateKey, fileName: private)),
                     ]),
-                    Column(children: [
-                      Row(children: [
-                        const Icon(Icons.create),
-                        ElevatedButton(
-                          onPressed: () => genAsymmetricKeys(),
-                          child: const Text("Generate Asymmetric Keys"),
-                        ),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(children: [
+                        Row(children: [
+                          const Icon(Icons.create),
+                          ElevatedButton(
+                            onPressed: () => genAsymmetricKeys(),
+                            child: const Text("Generate Asymmetric Keys"),
+                          ),
+                        ]),
+                        Row(children: [
+                          const Icon(Icons.public),
+                          ElevatedButton(
+                            onPressed: () => importPublicKey(),
+                            child: const Text("Import Public Key"),
+                          ),
+                        ]),
+                        Row(
+                          children: [
+                            const Icon(Icons.security_rounded),
+                            ElevatedButton(
+                              onPressed: () => importPrivateKey(),
+                              child: const Text("Import Private Key"),
+                            ),
+                          ],
+                        )
                       ]),
-                      Row(children: [
-                        const Icon(Icons.import_export),
-                        ElevatedButton(
-                          onPressed: () => importPublicKey(),
-                          child: const Text("Import Public Key"),
-                        ),
-                        ElevatedButton(
-                          onPressed: () => importPrivateKey(),
-                          child: const Text("Import Private Key"),
-                        ),
-                      ]),
-                    ]),
+                    ),
                   ]),
                 ],
               ),
               Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   wrap("Secret key: ", FileContentsWidget(key: secretKey, fileName: secret)),
-                  Column(children: [
-                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      const Icon(Icons.create),
-                      ElevatedButton(
-                        onPressed: () async => await genSecretKey(),
-                        child: const Text("Generate Secret Key"),
-                      ),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(children: [
+                      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        const Icon(Icons.create),
+                        ElevatedButton(
+                          onPressed: () async => await genSecretKey(),
+                          child: const Text("Generate Secret Key"),
+                        ),
+                      ]),
+                      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        const Icon(Icons.import_export),
+                        ElevatedButton(
+                          onPressed: () async => await importSecretKey(),
+                          child: const Text("Import Secret Key"),
+                        ),
+                      ]),
                     ]),
-                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      const Icon(Icons.import_export),
-                      ElevatedButton(
-                        onPressed: () async => await importSecretKey(),
-                        child: const Text("Import Secret Key"),
-                      ),
-                    ]),
-                  ]),
+                  ),
                 ]),
               ]),
             ],

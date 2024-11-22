@@ -39,9 +39,16 @@ class _SignFileWidgetState extends State<SignFileWidget> {
               FileContentsWidget(
                 contentOverride: selectedFile?.path ?? "None",
                 useErrorStyle: selectedFile == null,
+                maxExtents: (horizontal: true, vertical: selectedFile != null),
               ),
             ),
-            ...wrap("File contents: ", FileContentsWidget(file: selectedFile)),
+            ...wrap(
+              "File contents: ",
+              FileContentsWidget(
+                file: selectedFile,
+                maxExtents: (horizontal: true, vertical: selectedFile != null),
+              ),
+            ),
             ElevatedButton(onPressed: _pickFile, child: const Text("Select File")),
           ],
         ),
@@ -54,6 +61,7 @@ class _SignFileWidgetState extends State<SignFileWidget> {
               FileContentsWidget(
                 contentOverride: digestFileOutput?.path.replaceAll("/", "\\") ?? "None",
                 useErrorStyle: digestFileOutput == null,
+                maxExtents: (horizontal: true, vertical: digestText.isNotEmpty),
               ),
             ),
             ..._digestTextWidget,
@@ -75,6 +83,7 @@ class _SignFileWidgetState extends State<SignFileWidget> {
         contentOverride: digestText.isNotEmpty ? digestText : "Not calculated yet",
         styleOverride: style,
         useErrorStyle: digestText.isEmpty,
+        maxExtents: (horizontal: true, vertical: digestText.isNotEmpty),
       ),
     );
   }
