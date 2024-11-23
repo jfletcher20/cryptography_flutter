@@ -132,16 +132,7 @@ class _SignFileWidgetState extends State<SignFileWidget> {
     RSASigner signer = RSASigner(SHA256Digest(), _digestIdentifierHex);
     signer.init(true, privateKey);
 
-    final hash = SHA256Digest();
-    Uint8List digest = hash.process(Uint8List.fromList(fileContents.codeUnits));
-    File digestFile = await FileManager.saveToFile(
-      "digest.txt",
-      String.fromCharCodes(digest),
-      createDir: true,
-      additionalPath: "signature",
-    ) as File;
-
-    fileContents = FileManager.readFromFile(digestFile);
+    fileContents = FileManager.readFromFile(selectedFile!);
 
     RSASignature signature = signer.generateSignature(Uint8List.fromList(fileContents.codeUnits));
 
