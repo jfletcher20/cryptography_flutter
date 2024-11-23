@@ -1,3 +1,4 @@
+import 'package:cryptography_flutter/s_homepage/s_signature/w_verify.dart';
 import 'package:cryptography_flutter/s_homepage/s_tab_screen.dart';
 import 'package:cryptography_flutter/s_homepage/w_not_yet_implemented.dart';
 import 'package:cryptography_flutter/s_homepage/s_signature/w_sign.dart';
@@ -12,9 +13,7 @@ class SignatureScreen extends StatelessWidget {
       tabNames: const ["Sign", "Verify"],
       children: const [
         SignFileWidget(),
-        NotYetImplementedWidget(
-          text: "Due to library updates, this feature needs to be reimplemented.",
-        ),
+        VerifySignatureWidget(),
       ],
     );
   }

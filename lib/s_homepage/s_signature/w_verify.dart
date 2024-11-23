@@ -40,10 +40,10 @@ class _VerifySignatureWidgetState extends State<VerifySignatureWidget> {
         )),
         const SizedBox(height: 64),
         ..._verificationResultWidget,
-        ElevatedButton(
-          onPressed: isVerificationButtonEnabled ? _verifyFile : null,
-          child: const Text("Verify Signature"),
-        ),
+        // ElevatedButton(
+        //   onPressed: isVerificationButtonEnabled ? _verifyFile : null,
+        //   child: const Text("Verify Signature"),
+        // ),
       ],
     );
   }
@@ -56,9 +56,16 @@ class _VerifySignatureWidgetState extends State<VerifySignatureWidget> {
           FileContentsWidget(
             contentOverride: originalFile?.path ?? "None",
             useErrorStyle: originalFile == null,
+            maxExtents: (horizontal: true, vertical: originalFile != null),
           ),
         ),
-        ...wrap("File contents: ", FileContentsWidget(file: originalFile)),
+        ...wrap(
+          "File contents: ",
+          FileContentsWidget(file: originalFile, maxExtents: (
+            horizontal: true,
+            vertical: originalFile != null,
+          )),
+        ),
         ElevatedButton(onPressed: _pickOriginalFile, child: const Text("Select Original File")),
       ],
     );
@@ -72,9 +79,16 @@ class _VerifySignatureWidgetState extends State<VerifySignatureWidget> {
           FileContentsWidget(
             contentOverride: signedFile?.path ?? "None",
             useErrorStyle: signedFile == null,
+            maxExtents: (horizontal: true, vertical: signedFile != null),
           ),
         ),
-        ...wrap("File contents: ", FileContentsWidget(file: signedFile)),
+        ...wrap(
+          "File contents: ",
+          FileContentsWidget(
+            file: signedFile,
+            maxExtents: (horizontal: true, vertical: signedFile != null),
+          ),
+        ),
         ElevatedButton(onPressed: _pickSignedFile, child: const Text("Select Signed File")),
       ],
     );
@@ -101,6 +115,7 @@ class _VerifySignatureWidgetState extends State<VerifySignatureWidget> {
       setState(() {
         originalFile = File(result.files.single.path!);
         isVerificationButtonEnabled = originalFile != null && signedFile != null;
+        _verifyFile();
       });
     }
   }
@@ -111,6 +126,7 @@ class _VerifySignatureWidgetState extends State<VerifySignatureWidget> {
       setState(() {
         signedFile = File(result.files.single.path!);
         isVerificationButtonEnabled = originalFile != null && signedFile != null;
+        _verifyFile();
       });
     }
   }
@@ -135,10 +151,7 @@ class _VerifySignatureWidgetState extends State<VerifySignatureWidget> {
       RSASignature(Uint8List.fromList(signedFileContents.codeUnits)),
     );
 
-    setState(() {
-      verificationResult = verification;
-    });
-
+    setState(() => verificationResult = verification);
     return verification;
   }
 }
