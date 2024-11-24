@@ -1,20 +1,22 @@
 // ignore_for_file: curly_braces_in_flow_control_structures
+import 'package:pointycastle/padded_block_cipher/padded_block_cipher_impl.dart';
+import 'package:pointycastle/export.dart' as crypto;
+import 'package:pointycastle/block/modes/cbc.dart';
+import 'package:pointycastle/asymmetric/api.dart';
+import 'package:pointycastle/paddings/pkcs7.dart';
+import 'package:pointycastle/block/aes.dart';
+import 'package:pointycastle/api.dart';
 
-import 'dart:io';
-import 'dart:typed_data';
 import 'package:cryptography_flutter/file_management/u_file_creation.dart';
 import 'package:cryptography_flutter/file_management/u_keys.dart';
 import 'package:cryptography_flutter/w_file_contents.dart';
+
 import 'package:file_picker/file_picker.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pointycastle/api.dart';
-import 'package:pointycastle/asymmetric/api.dart';
-import 'package:pointycastle/block/aes.dart';
-import 'package:pointycastle/block/modes/cbc.dart';
-import 'package:pointycastle/export.dart' as crypto;
-import 'package:pointycastle/padded_block_cipher/padded_block_cipher_impl.dart';
-import 'package:pointycastle/paddings/pkcs7.dart';
+
+import 'dart:io';
 
 class DecryptWidget extends StatefulWidget {
   const DecryptWidget({super.key});

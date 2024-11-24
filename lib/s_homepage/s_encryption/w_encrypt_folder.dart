@@ -1,3 +1,4 @@
+// ignore_for_file: prefer_void_to_null
 import 'package:cryptography_flutter/file_management/u_file_creation.dart';
 import 'package:cryptography_flutter/file_management/u_keys.dart';
 import 'package:cryptography_flutter/w_file_contents.dart';
@@ -19,18 +20,19 @@ import 'package:flutter/services.dart';
 import 'dart:math';
 import 'dart:io';
 
-class EncryptWidget extends StatefulWidget {
-  const EncryptWidget({super.key});
+class EncryptFolderWidget extends StatefulWidget {
+  const EncryptFolderWidget({super.key});
 
   @override
-  State<EncryptWidget> createState() => _EncryptWidgetState();
+  State<EncryptFolderWidget> createState() => _EncryptFolderWidgetState();
 }
 
-class _EncryptWidgetState extends State<EncryptWidget> with AutomaticKeepAliveClientMixin {
+class _EncryptFolderWidgetState extends State<EncryptFolderWidget>
+    with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
-  File? selectedFile;
+  Directory? selectedFolder;
   bool isEncryptButtonEnabled = false;
   String encryptedTextRSA = "", encryptedTextAES = "";
 
@@ -48,7 +50,7 @@ class _EncryptWidgetState extends State<EncryptWidget> with AutomaticKeepAliveCl
             _asymmetricEncryptionWidget,
             Opacity(
               opacity: 0,
-              child: ElevatedButton(onPressed: _pickFile, child: const Text("Select File")),
+              child: ElevatedButton(onPressed: _pickFolder, child: const Text("Select File")),
             ),
             _symmetricEncryptionWidget,
           ],
@@ -64,20 +66,21 @@ class _EncryptWidgetState extends State<EncryptWidget> with AutomaticKeepAliveCl
         children: wrap(
           "Selected file: ",
           FileContentsWidget(
-            contentOverride: selectedFile?.path ?? "None",
-            useErrorStyle: selectedFile == null,
-            maxExtents: (horizontal: true, vertical: selectedFile != null),
+            contentOverride: selectedFolder?.path ?? "None",
+            useErrorStyle: selectedFolder == null,
+            maxExtents: (horizontal: true, vertical: selectedFolder != null),
           ),
         ),
       ),
-      ElevatedButton(onPressed: _pickFile, child: const Text("Select File")),
+      ElevatedButton(onPressed: _pickFolder, child: const Text("Select File")),
       Column(
         children: wrap(
           "File contents: ",
           FileContentsWidget(
-            file: selectedFile,
-            useErrorStyle: selectedFile == null,
-            maxExtents: (horizontal: true, vertical: selectedFile != null),
+            contentOverride:
+                selectedFolder != null ? selectedFolder?.path ?? "Folder selected" : "",
+            useErrorStyle: selectedFolder == null,
+            maxExtents: (horizontal: true, vertical: selectedFolder != null),
           ),
         ),
       ),
@@ -91,7 +94,7 @@ class _EncryptWidgetState extends State<EncryptWidget> with AutomaticKeepAliveCl
       ..._encryptedTextRSAWidget,
       Row(children: [
         ElevatedButton(
-          onPressed: isEncryptButtonEnabled ? _encryptFileRSA : null,
+          onPressed: isEncryptButtonEnabled ? _encryptFolderRSA : null,
           child: const Text("Asymmetric Encryption"),
         ),
         ElevatedButton(
@@ -119,7 +122,7 @@ class _EncryptWidgetState extends State<EncryptWidget> with AutomaticKeepAliveCl
       ..._encryptedTextAESWidget,
       Row(children: [
         ElevatedButton(
-          onPressed: isEncryptButtonEnabled ? _encryptFileAES : null,
+          onPressed: isEncryptButtonEnabled ? _encryptFolderAES : null,
           child: const Text("Symmetric Encryption"),
         ),
         ElevatedButton(
@@ -172,57 +175,71 @@ class _EncryptWidgetState extends State<EncryptWidget> with AutomaticKeepAliveCl
     return [Text(label), child];
   }
 
-  Future<void> _pickFile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles();
-    if (result != null) {
+  Future<void> _pickFolder() async {
+    // Use FilePicker to allow folder selection.
+    String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+    if (selectedDirectory != null) {
       setState(() {
-        selectedFile = File(result.files.single.path!);
+        selectedFolder = Directory(selectedDirectory);
         isEncryptButtonEnabled = true;
       });
     }
   }
 
+  Future<void> _encryptFolderAES() async {
+    Directory dir = selectedFolder!;
+    if (await dir.exists()) {
+      for (var file in dir.listSync()) {
+        if (file is File) {
+          String encryptedFileName = "${file.path}_encrypted_aes";
+          String encryptedContent = await symmetricEncryption(file.path);
+          await File(encryptedFileName).writeAsString(encryptedContent);
+        }
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("All files in folder encrypted with AES.")),
+        );
+      }
+    }
+  }
+
+  Future<void> _encryptFolderRSA() async {
+    try {
+      Directory dir = selectedFolder!;
+      if (await dir.exists()) {
+        for (var file in dir.listSync()) {
+          if (file is File) {
+            String encryptedFileName = "${file.path}_encrypted_rsa";
+            String encryptedContent = await asymmetricEncryption(file.path);
+            await File(encryptedFileName).writeAsString(encryptedContent);
+          }
+        }
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("All files in folder encrypted with RSA.")),
+          );
+        }
+      }
+    } catch (e) {
+      print(e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error encrypting folder with RSA: $e")),
+        );
+      }
+    }
+  }
+
   String getFileName(String type) {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    String originalFileName = selectedFile!.path.split("\\").last.replaceAll(".txt", "");
+    String originalFileName = selectedFolder!.path.split("\\").last.replaceAll(".txt", "");
     String fileName = "${originalFileName}_${type}_encryption_$timestamp.txt";
     return fileName;
   }
 
-  Future<void> _encryptFileAES() async {
-    if (selectedFile == null) return;
-    try {
-      File? result = await FileManager.saveToFile(
-        getFileName("symmetric"),
-        await symmetricEncryption(),
-        additionalPath: "symmetric_encryption",
-        createDir: true,
-      );
-      if (mounted) setState(() => _encryptedAESFile = result);
-    } catch (e) {
-      if (mounted)
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
-    }
-  }
-
-  Future<void> _encryptFileRSA() async {
-    if (selectedFile == null) return;
-    try {
-      File? result = await FileManager.saveToFile(
-        getFileName("asymmetric"),
-        await asymmetricEncryption(),
-        additionalPath: "asymmetric_encryption",
-        createDir: true,
-      );
-      if (mounted) setState(() => _encryptedRSAFile = result);
-    } catch (e) {
-      if (mounted)
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
-    }
-  }
-
-  Future<String> asymmetricEncryption() async {
-    String fileContents = FileManager.readFromFile(selectedFile!);
+  Future<String> asymmetricEncryption(String filePath) async {
+    String fileContents = FileManager.readFromFile(File(filePath));
 
     AsymmetricKeyParameter<RSAPublicKey> publicKey =
         PublicKeyParameter(await KeysManager.publicKey());
@@ -231,15 +248,13 @@ class _EncryptWidgetState extends State<EncryptWidget> with AutomaticKeepAliveCl
     cipher.init(true, publicKey);
 
     Uint8List cipherText = cipher.process(Uint8List.fromList(fileContents.codeUnits));
-    setState(() {
-      encryptedTextRSA = String.fromCharCodes(cipherText);
-    });
 
+    // Return encrypted data as a String or Uint8List, depending on your needs
     return String.fromCharCodes(cipherText);
   }
 
-  Future<String> symmetricEncryption() async {
-    String fileContents = FileManager.readFromFile(selectedFile!);
+  Future<String> symmetricEncryption(String filePath) async {
+    String fileContents = "" + FileManager.readFromFile(File(filePath)) + "\n";
 
     Uint8List secretKey = await KeysManager.secretKey();
 
@@ -247,9 +262,7 @@ class _EncryptWidgetState extends State<EncryptWidget> with AutomaticKeepAliveCl
     Random seedRandom = Random.secure();
 
     List<int> seeds = [];
-    for (int i = 0; i < 32; i++) {
-      seeds.add(seedRandom.nextInt(256));
-    }
+    for (int i = 0; i < 32; i++) seeds.add(seedRandom.nextInt(256));
 
     secureRandom.seed(KeyParameter(Uint8List.fromList(seeds)));
 
@@ -266,16 +279,12 @@ class _EncryptWidgetState extends State<EncryptWidget> with AutomaticKeepAliveCl
     PaddedBlockCipherImpl cipherImpl = PaddedBlockCipherImpl(PKCS7Padding(), cipher);
     cipherImpl.init(true, params);
 
-    Uint8List cipherText =
-        cipherImpl.process(Uint8List.fromList(Uint8List.fromList(fileContents.codeUnits)));
+    Uint8List cipherText = cipherImpl.process(Uint8List.fromList(fileContents.codeUnits));
 
     // Prepend the IV to the ciphertext (for later decryption)
     Uint8List result = Uint8List.fromList([...iv, ...cipherText]);
 
-    setState(() {
-      encryptedTextAES = String.fromCharCodes(result);
-    });
-
+    // Return encrypted data as a String or Uint8List, depending on your needs
     return String.fromCharCodes(result);
   }
 

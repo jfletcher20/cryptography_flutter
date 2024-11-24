@@ -1,9 +1,9 @@
 // ignore_for_file: curly_braces_in_flow_control_structures
+import 'package:cryptography_flutter/s_auth/u_auth.dart';
+
+import 'package:path_provider/path_provider.dart';
 
 import 'dart:io';
-
-import 'package:cryptography_flutter/s_auth/u_auth.dart';
-import 'package:path_provider/path_provider.dart';
 
 class FileManager {
   static Future<File?> saveToFile(
