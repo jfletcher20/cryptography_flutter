@@ -1,7 +1,9 @@
 # cryptography_flutter
+Initially developed for the Advanced Operating Systems project at the Faculty of Organization and Informatics, Software Engineering graduate study.
+This project was further developed and used in the Digital Forensics project to encrpyt and allow for further decrypting and deciphering of clues found at [globa-telecom-official-email-server](https://global-telecom-official.web.app/) (from [this repository](https://github.com/jfletcher20/email-frontend-page-emulation)).
 
 ## Project description
-Project repository for the Advanced Operating Systems assignment on cryptography at the Faculty of Organization and Informatics, Software Engineering graduate study.
+Explores the implementation of cryptography features into a multi-platform application.
 I was interested in seeing if this was possible in Flutter and it turned out to be fairly straightforward once you understood the libraries and the concepts.
 
 ## Features
